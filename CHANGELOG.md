@@ -33,5 +33,5 @@ Initial Release.
 These Markdown anchors provide a link to the diff for each release. They should be
 updated any time a new release is cut.
 -->
-[Unreleased]: https://github.com/timoguin/repo-template/compare/v0.0.1...HEAD
-[0.0.1]: https://github.com/timoguin/repo-template/releases/tag/v0.0.1
+[Unreleased]: https://github.com/timoguin/aws-org-tools-py/compare/v0.0.1...HEAD
+[0.0.1]: https://github.com/timoguin/aws-org-tools-py/releases/tag/v0.0.1
