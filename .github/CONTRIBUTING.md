@@ -30,7 +30,7 @@ until they're ready to be submitted upstream via a PR.
 
 
 <!-- Markdown anchors -->
-[GitHub Issues]: https://github.com/timoguin/repo-template/issues).
+[GitHub Issues]: https://github.com/timoguin/aws-org-tools-py/issues).
 [README]: README.md
 [Readme Driven Development]: https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 [CHANGELOG]: CHANGELOG.md

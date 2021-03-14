@@ -1,89 +1,236 @@
-# Repo Template
+# AWS Data Tools
 
-This repository is a very basic template for a new repository hosted on GitHub. It
-contains the following boilerplate:
+An set of opinioned (but flexible) Python libraries for querying and transforming data
+from various AWS APIs, as well as a CLI interface.
 
-- CHANGELOG.md
-- LICENSE
-- README.md
-- GitHub CODEOWNERS
-- Code of Conduct
-- Contributing Guide
-- Security Guide
-- Empty dirs for GitHub Issue and PR templates
-- Empty dir for GitHub Actions workflows
-- Large .gitignore file
+This is in early development.
+
+## Installation
+
+Using pip should work on any system with at least Python 3.9:
+
+```shell
+$ pip install aws-data-tools
+```
+
+By default, the CLI is not installed. To include it, you can specify it as an extra:
+
+```shell
+$ pip install aws-data-tools[cli]
+```
 
 ## Usage
 
-I highly recommened the [GitHub CLI](https://cli.github.com) for interacting with the
-various GitHub APIs.
+There are currently 4 main components of the package: helpers for working with AWS
+session and APIs, data models for API data types, builders to query AWS APIs and
+perform deserialization and ETL operations of raw data, and a CLI tool to further
+abstract some of these operations.
 
-To create a new repository from this template, you can do the following:
+### API Client
 
-```
-$ gh repo create YOUR_GITHUB_USER/YOUR_GITHUB_REPO --description "A description of your repository" --template timoguin/repo-template --confirm
-```
+The [APIClient](aws_data_models/__init__.py) class wraps the initialization of a boto3
+session and a low-level client for a named service. It contains a single `api()`
+function that takes the name of an API operation and any necessary request data as
+kwargs.
 
-Since this is a very basic template, you will need to populate or modify some aspects
-of the repo contents after initial creation.
+It supports automatic pagination of any API operations that support it. The pagination
+config is set to `{'MaxItems': 500}` by default, but a `pagination_config` dict can be
+passed for any desired customizations.
 
-Here are the steps:
+When initializing the class, it will create a session and a client.
 
-- Update this [README].
-- Update [CODEOWNERS]. This is used by GitHub for code reviews.
-- Update the [LICENSE]. By default, this template includes the MIT license text.
-- Update the [CHANGELOG] to include links for your specific repository. 
-- Update the [Contributing Guide]. By default, this template includes text describing
-  an opinionated fork-based workflow.
-- Update the [Code of Conduct] and insert your preferred contact method in the
-  [Enforcement] section. By default, this template includes the text from v2.0 of the
-  [Contributor Covenant].
-- Update the [Security Guide] to detail the process for reporting security issues.
-- If you want to use [Issue Templates], add them to the [ISSUE_TEMPLATE] directory.
-- If you want to use [Pull Request Templates], add them to the
-  [PULL_REQUEST_TEMPLATE] directory.
-- If you want to use [GitHub Actions], add workflow definitions to the [workflows]
-  directory.
-- Edit the [gitignore] file to your preferences. The included on is quite large and
-  includes a swath of patterns for various languages, tooling, and operating systems.
+```python
+from aws_data_tools import APIClient
 
-And here is a sed-based method example to help with some of the more basic
-search-and-replace tasks:
-
-```
-$ export NAME="Your Name"
-$ export EMAIL="example@example.com"
-$ export GITHUB_USER="YOUR_GITHUB_USER"
-$ export GITHUB_REPO="YOUR_REPO"
-
-# For OS X, use gsed. Otherwise you will get the error "invalid command code C".  See
-# the below this code snippet.
-alias sed=gsed
-
-$ echo -e "# $GITHUB_REPO\n\nThis is my README, and I hope you will READ it." > README.md
-$ sed -i "s/@timoguin/@$GITHUB_USER/; s/Tim O'Guin/$NAME/; s/timoguin@gmail.com/$EMAIL/; s/timoguin\/repo-template/$GITHUB_USER\/$GITHUB_REPO/; s/2021 /$(date +'%Y') /" CHANGELOG.md LICENSE .github/CODEOWNERS .github/*.md
+client = APIClient("organizations")
+org = client.api("describe_organization").get("organization")
+roots = client.api("list_roots")
+ous = client.api("list_organizational_units_for_parent", parent_id="r-abcd").get(
+    "organizational_units"
+)
 ```
 
-**NOTE**: if you are using OS X, you will need [GNU Sed] to support the -i flag for
-in-place file modifications.
+Note that, generally, any list operations will return a list with no further filtering
+required, while describe calls will have the data keyed under the name of the object
+being described. For example, describing an organization returns the relavant data
+under an `organization` key.
 
+Furthermore, you may notice above that API operations and their corresponding arguments
+support `snake_case` format. Arguments can also be passed in the standard `PascalCase`
+format that the APIs utilize. Any returned data has any keys converted to `snake_case`.
 
-<!-- Markdown anchors -->
-[README]: README.md
-[CODEOWNERS]: .github/CODEOWNERS
-[LICENSE]: LICENSE
-[CHANGELOG]: CHANGELOG.md
-[Contributing Guide]: .github/CONTRIBUTING.md
-[Code of Conduct]: .github/CODE_OF_CONDUCT.md
-[Enforcement]: .github/CODE_OF_CONDUCT.md#Enforcement
-[Contributor Covenant]: https://www.contributor-covenant.org/version/2/0/code_of_conduct/
-[Security Guide]: .github/SECURITY.md
-[Issue Templates]: https://docs.github.com/en/github/building-a-strong-community/configuring-issue-templates-for-your-repository
-[ISSUE_TEMPLATE]: .github/ISSUE_TEMPLATE
-[Pull Request Templates]: https://docs.github.com/en/github/building-a-strong-community/creating-a-pull-request-template-for-your-repository
-[PULL_REQUEST_TEMPLATE]: .github/PULL_REQUEST_TEMPLATE
-[GitHub Actions]: https://docs.github.com/en/actions
-[workflows]: .github/workflows
-[gitignore]: .gitignore
-[GNU Sed]: https://formulae.brew.sh/formula/gnu-sed
+The raw boto3 session is available as the `session` field, and the raw, low-level
+client is available as the `client` field.
+
+### Data Models
+
+The [models](aws_data_tools/models) package contains a collection of opinionated models
+implemented as data classes. There is a package for each available service. Each one is
+named after the service that would be passed when creating a boto3 client using
+`boto3.client('service_name')`.
+
+#### Organizations
+
+Most data types used with the Organizations APIs are supported. The top-level
+`Organization` class is the most useful, as it also acts as a container for all other
+related data in the organization.
+
+The following data types and operations are currently not supported:
+
+- Viewing organization handshakes (for creating and accepting account invitations)
+- Viewing the status of accounts creations
+- Viewing organization integrations with AWS services (for org-wide implementations of
+  things like CloudTrail, Config, etc.)
+- Viewing delegated accounts and services
+- Any operations that are not read-only
+
+All other data types are supported.
+
+```python
+from aws_data_tools import APIClient
+from aws_data_tools.models.organizations import Organization
+
+client = APIClient("organizations")
+data = client.api("describe_organization").get("organization")
+org = Organization(**data)
+org.as_json()
+```
+
+View the [package](aws_data_tools/models/organization/__init__.py) for the full list of
+models.
+
+### Builders
+
+While it is possible to directly utilize and interact with the data models, probably
+the largest benefit is the [builders](aws_data_tools/builders) package. It abstracts
+any API operations and data transformations required to build data models. The models
+can then be serialized to dicts, as well as JSON or YAML strings.
+
+### Organizations
+
+A full model of an AWS Organization can be constructed using the
+`OrganizationDataBuilder` class. It handles recursing the organizational tree and
+populating any relational data between the various nodes, e.g., parent-child
+relationships between an OU and an account.
+
+The simplest example pulls all supported organizational data and creates the related
+data models:
+
+```python
+from aws_data_tools.builders.organizations import OrganizationDataBuilder as odb
+
+org = odb(init_all=True)
+```
+
+Note that this makes many API calls to get this data. For example, every OU, policy,
+and account requires an API call to pull any associated tags, so every node requires at
+least `n+3` API calls. Parallel operations are not supported, so everything runs
+serially.
+
+To get a sense of the number of API calls required to populate organization data, an
+organization with 50 OUs, 5 policies, 200 accounts, and with all policy types activated
+requires 316 API calls! That's why this library was created.
+
+For more control over the process, you can init each set of components as desired:
+
+```python
+from aws_data_tools.builders.organizations import OrganizationDataBuilder as odb
+
+org = odb()
+org.init_connection()
+org.init_organization()
+org.init_root()
+org.init_policies()
+org.init_policy_tags()
+org.init_ous()
+org.init_ou_tags()
+org.init_accounts()
+org.init_account_tags()
+org.init_policy_targets()
+org.init_effective_policies()
+```
+
+### CLI
+
+As noted above, the CLI is an optional component that can be installed using pip's
+bracket notation for extras:
+
+```shell
+$ pip install aws-data-tools[cli]
+```
+
+With no arguments or flags, help content is displayed by default. You can also pass the
+`--help` flag for the help content of any commands or subcommands.
+
+```shell
+$ awsdata
+Usage: awsdata [OPTIONS] COMMAND [ARGS]...
+
+  A command-line tool to interact with data from AWS APIs
+
+Options:
+  --version    Show the version and exit.
+  -d, --debug  Enable debug mode
+  -h, --help   Show this message and exit.
+
+Commands:
+  organization  Interact with data from AWS Organizations APIs
+```
+
+#### Organizations
+
+Here is how to dump a JSON representation of an AWS Organization to stdout:
+
+The `organization` subcommand allows dumping organization data to a file or to stdout:
+
+```shell
+$ awsdata organization dump-json --format json
+Usage: awsdata organization dump-json [OPTIONS]
+
+  Dump a JSON representation of the organization
+
+Options:
+  --no-accounts             Exclude account data from the model
+  --no-policies             Exclude policy data from the model
+  -f, --format [JSON|YAML]  The output format for the data
+  -o, --out-file TEXT       File path to write data instead of stdout
+  -h, --help                Show this message and exit.
+```
+
+## Roadmap
+
+The goal of this package is to provide consistent, enriched schemas for data from both
+raw API calls and data from logged events. We should also be able to unwrap and parse
+data from messaging and streaming services like SNS, Kinesis, and EventBridge.
+
+Here are some examples:
+
+- Query Organizations APIs to build consistent, denormalized models of organizations
+- Validate and enrich data from CloudTrail log events
+- Parse S3 and ELB access logs into JSON
+
+This initial release only contains support for managing data from AWS Organizations
+APIs.
+
+The following table shows what kinds of things may be supported in the future:
+
+| Library Name  | Description                                                       | Data Type | Data Sources                                                  | Supported |
+|---------------|-------------------------------------------------------------------|-----------|---------------------------------------------------------------|-----------|
+| organizations | Organization and OU hierarchy, policies, and accounts             | API       | Organizations APIs                                            | ☑         |
+| cloudtrail    | Service API calls recorded by CloudTrail                          | Log       | S3 / SNS / SQS / CloudWatch Logs / Kinesis / Kinesis Firehose | ☐         |
+| s3            | Access logs for S3 buckets                                        | Log       | S3 / SNS / SQS                                                | ☐         |
+| elb           | Access logs from Classic, Application, and Network Load Balancers | Log       | S3 / SNS / SQS                                                | ☐         |
+| vpc_flow      | Traffic logs from VPCs                                            | Log       | S3 / CloudWatch Logs / Kinesis / Kinesis Firehose             | ☐         |
+| config        | Resource state change events from AWS Config                      | Log       | S3 / SNS / SQS                                                | ☐         |
+| firehose      | Audit logs for Firehose delivery streams                          | Log       | CloudWatch Logs / Kinesis / Kinesis Firehose                  | ☐         |
+| ecs           | Container state change events                                     | Log       | CloudWatch Events / EventBridge                               | ☐         |
+| ecr           | Repository events for stored images                               | Log       | CloudWatch Events / EventBridge                               | ☐         |
+
+References:
+
+- CloudWatch Logs: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/aws-services-sending-logs.html
+- CloudWatch Events: https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/EventTypes.html
+
+## Contributing
+
+View the [Contributing Guide](.github/CONTRIBUTING.md) to learn about giving back.

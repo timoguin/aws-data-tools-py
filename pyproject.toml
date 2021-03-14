@@ -1,0 +1,77 @@
+[tool.poetry]
+name = "aws_data_tools"
+version = "0.1.0-alpha4"
+description = "A set of Python libraries for querying and transforming data from AWS APIs"
+authors = ["Tim O'Guin <timoguin@gmail.com>"]
+license = "MIT"
+maintainers = ["Tim O'Guin <timoguin@gmail.com>"]
+readme = "README.md"
+homepage = "https://timoguin.github.io/aws-data-tools-py"
+repository = "https://github.com/timoguin/aws-data-tools-py"
+documentation = "https://timoguin.github.io/aws-data-tools-py"
+keywords = ["aws", "etl", "library"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+exclude = ["tests"]
+include = ["CHANGELOG.md"]
+
+[tool.poetry.urls]
+Changelog = "https://github.com/timoguin/aws-data-tools-py/blob/master/CHANGELOG.md"
+Documentation = "https://timoguin.github.io/aws-data-tools-py"
+Source = "https://github.com/timoguin/aws-data-tools-py"
+Tracker = "https://github.com/timoguin/aws-data-tools-py/issues"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<4"
+boto3 = "^1.17.80"
+pyhumps = "^3.0.2"
+PyYAML = "^5.4.1"
+structlog = "^21.1.0"
+
+# Optional extras: cli
+click = {version = "^8.0.1", optional = true, extras = ["cli"]}
+
+# Optional extras: devtools
+ipdb = {version = "^0.13.8", optional = true, extras=["devtools"]}
+notebook = {version = "^6.4.0", optional = true, extras = ["devtools"]}
+pre-commit = {version = "^2.13.0", optional = true, extras = ["devtools"]}
+
+# Optional extras: docs
+blacken-docs = {version = "^1.10.0", optional = true, extras = ["docs"]}
+mkdocs = {version = "^1.1.2", optional = true, extras = ["docs"]}
+mkdocs-git-revision-date-localized-plugin = {version = "^0.9.2", optional = true, extras = ["docs"]}
+mkdocs-macros-plugin = {version = "^0.5.5", optional = true, extras = ["docs"]}
+mkdocs-material = {version = "^7.1.5", optional = true, extras = ["docs"]}
+
+[tool.poetry.dev-dependencies]
+black = "^21.5b1"
+pytest = "^6.2.4"
+tox = "^3.23.1"
+
+[tool.poetry.extras]
+cli = ["click"]
+devtools = [
+    "ipdb",
+    "notebook",
+    "pre-commit"
+]
+docs = [
+    "blacken-docs",
+    "mkdocs",
+    "mkdocs-git-revision-date-localized-plugin",
+    "mkdocs-macros-plugin",
+    "mkdocs-material"
+]
+
+[tool.poetry.scripts]
+awsdata = "aws_data_tools.cli:cli"
+
+[build-system]
+requires = ["poetry-core>=1.0.3"]
+build-backend = "poetry.core.masonry.api"
