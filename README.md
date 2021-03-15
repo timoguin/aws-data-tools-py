@@ -22,7 +22,6 @@ APIs.
 
 The following table shows what kinds of things may be supported in the future:
 
-|---------------|-------------------------------------------------------------------|-----------|---------------------------------------------------------------|-----------|
 | Library Name  | Description                                                       | Data Type | Data Sources                                                  | Supported |
 |---------------|-------------------------------------------------------------------|-----------|---------------------------------------------------------------|-----------|
 | organizations | Organization and OU hierarchy, policies, and accounts             | API       | Organizations APIs                                            | [x]       |
@@ -34,7 +33,6 @@ The following table shows what kinds of things may be supported in the future:
 | firehose      | Audit logs for Firehose delivery streams                          | Log       | CloudWatch Logs / Kinesis / Kinesis Firehose                  | [ ]       |
 | ecs           | Container state change events                                     | Log       | CloudWatch Events / EventBridge                               | [ ]       |
 | ecr           | Repository events for stored images                               | Log       | CloudWatch Events / EventBridge                               | [ ]       |
-|---------------|-------------------------------------------------------------------|-----------|---------------------------------------------------------------|-----------|
 
 References:
 
