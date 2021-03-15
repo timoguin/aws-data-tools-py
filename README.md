@@ -24,15 +24,15 @@ The following table shows what kinds of things may be supported in the future:
 
 | Library Name  | Description                                                       | Data Type | Data Sources                                                  | Supported |
 |---------------|-------------------------------------------------------------------|-----------|---------------------------------------------------------------|-----------|
-| organizations | Organization and OU hierarchy, policies, and accounts             | API       | Organizations APIs                                            | [x]       |
-| cloudtrail    | Service API calls recorded by CloudTrail                          | Log       | S3 / SNS / SQS / CloudWatch Logs / Kinesis / Kinesis Firehose | [ ]       |
-| s3            | Access logs for S3 buckets                                        | Log       | S3 / SNS / SQS                                                | [ ]       |
-| elb           | Access logs from Classic, Application, and Network Load Balancers | Log       | S3 / SNS / SQS                                                | [ ]       |
-| vpc_flow      | Traffic logs from VPCs                                            | Log       | S3 / CloudWatch Logs / Kinesis / Kinesis Firehose             | [ ]       |
-| config        | Resource state change events from AWS Config                      | Log       | S3 / SNS / SQS                                                | [ ]       |
-| firehose      | Audit logs for Firehose delivery streams                          | Log       | CloudWatch Logs / Kinesis / Kinesis Firehose                  | [ ]       |
-| ecs           | Container state change events                                     | Log       | CloudWatch Events / EventBridge                               | [ ]       |
-| ecr           | Repository events for stored images                               | Log       | CloudWatch Events / EventBridge                               | [ ]       |
+| organizations | Organization and OU hierarchy, policies, and accounts             | API       | Organizations APIs                                            | ☑         |
+| cloudtrail    | Service API calls recorded by CloudTrail                          | Log       | S3 / SNS / SQS / CloudWatch Logs / Kinesis / Kinesis Firehose | ☐         |
+| s3            | Access logs for S3 buckets                                        | Log       | S3 / SNS / SQS                                                | ☐         |
+| elb           | Access logs from Classic, Application, and Network Load Balancers | Log       | S3 / SNS / SQS                                                | ☐         |
+| vpc_flow      | Traffic logs from VPCs                                            | Log       | S3 / CloudWatch Logs / Kinesis / Kinesis Firehose             | ☐         |
+| config        | Resource state change events from AWS Config                      | Log       | S3 / SNS / SQS                                                | ☐         |
+| firehose      | Audit logs for Firehose delivery streams                          | Log       | CloudWatch Logs / Kinesis / Kinesis Firehose                  | ☐         |
+| ecs           | Container state change events                                     | Log       | CloudWatch Events / EventBridge                               | ☐         |
+| ecr           | Repository events for stored images                               | Log       | CloudWatch Events / EventBridge                               | ☐         |
 
 References:
 
