@@ -50,13 +50,13 @@ to include possible future installation methods.
 
 Using pip should work on any system with at least Python 3.9:
 
-`$ pip install aws-org-tools`
+`$ pip install aws-data-tools`
 
 ### MacOS
 
 With homebrew:
 
-`$ brew install aws-org-tools-py`
+`$ brew install aws-data-tools-py`
 
 Using the pkg installer:
 
@@ -65,18 +65,16 @@ dependencies, including Python itself. This probably means using pyInstaller to 
 an "app" image.)
 
 ```
-$ LATEST=$(gh release list --repo timoguin/aws-org-tools-py | grep 'Latest' | cut -f1)
-$ curl -sL https://github.com/segmentio/aws-okta/releases/download/aws-org-tools-py.pkg --output aws-org-tools-py_$LATEST.pkg
-$ installer -pkg aws-org-tools.py_$LATEST.pkg -target /usr/local/bin
+$ LATEST=$(gh release list --repo timoguin/aws-data-tools-py | grep 'Latest' | cut -f1)
+$ curl -sL https://github.com/segmentio/aws-okta/releases/download/aws-data-tools-py.pkg --output aws-data-tools-py_$LATEST.pkg
+$ installer -pkg aws-data-tools.py_$LATEST.pkg -target /usr/local/bin
 ```
 
 ### Windows
 
 With chocolatey:
 
-`$ choco install aws-org-tools-py`
-
-With MSI:
+`$ choco install aws-data-tools-py`
 
 ## Usage
 
