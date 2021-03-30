@@ -1,0 +1,23 @@
+/Cool BU
+/Cool BU/Great Cloud Service/Production
+/Cool BU/Great Cloud Service/Staging
+/Cool BU/Great Cloud Service/Development
+/Cool BU/Another Great Service/Production
+/Cool BU/Another Great Service/Staging
+/Cool BU/Another Great Service/Development
+/Cool BU/Cool Admins/Control/Prod/
+/Cool BU/Cool Admins/Control/Stage/
+/Cool BU/Cool Admins/Control/Dev/
+/Ecstatic BU
+/Ecstatic BU/Oracle Admins/DB1/Prd
+/Ecstatic BU/Oracle Admins/DB1/Prdtst
+/Ecstatic BU/Oracle Admins/DB1/Stg
+/Ecstatic BU/Oracle Admins/DB1/Dev
+/Disaster Prep BU/Doomsday Unit/Archive/Prod
+/Disaster Prep BU/Doomsday Unit/Archive/Staging
+/Disaster Prep BU/Doomsday Unit/Archive/QA
+/Disaster Prep BU/Doomsday Unit/Archive/Dev
+/Disaster Prep BU/Horticulture Unit/PlantDB/Prod
+/Disaster Prep BU/Horticulture Unit/PlantDB/Dev
+/Disaster Prep BU/Horticulture Unit/AquaponicsMon/Prod
+/Disaster Prep BU/Horticulture Unit/AquaponicsMon/Dev

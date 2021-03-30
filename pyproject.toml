@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "aws_data_tools"
+version = "0.1.0"
+description = "An set of opinioned (but flexible) Python libraries for querying and transforming data from various AWS APIs, as well as a CLI interface."
+authors = ["Tim O'Guin <timoguin@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+boto3 = "^1.17.29"
+dacite = "^1.6.0"
+pyhumps = "^1.6.1"
+ipdb = "^0.13.7"
+click = "^7.1.2"
+
+[tool.poetry.dev-dependencies]
+notebook = "^6.2.0"
+pytest = "^6.2.2"
+pylint = "^2.7.2"
+pep8 = "^1.7.1"
+tox = "^3.23.0"
+flake8 = "^3.9.0"
+mkdocs = "^1.1.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
