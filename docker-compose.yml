@@ -31,3 +31,4 @@ services:
       # /tmp is symlinked to /private/tmp, which can't be access by Localstack.
       - "/private/tmp/localstack:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+      - "$PWD/initaws.d:/docker-entrypoint-initaws.d"

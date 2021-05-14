@@ -11,8 +11,10 @@
 # - Create 1st level OUs and record their OU IDs
 # - Repeat process recursively until max depth is reached
 #
+# Dependencies:
+# - awslocal
+#
 # =================================================================================== #
-
 
 #!/bin/bash
 set -euo pipefail
@@ -22,33 +24,19 @@ set -euo pipefail
 DEBUG="${DEBUG:-false}"
 if [ "$DEBUG" == "true" ] || [ "${1:-DEBUG=false}" == "DEBUG=true" ]; then set -x; fi
 
-# Shell colors
-ERROR="\033[31m" # Red
-WARN="\033[33m"  # Yellow
-OK="\033[32m"    # Green
-CCEND="\033[0m"  # No Color (CCEND= "Color Code End")
+# Load helper vars and functions
+source helpers.sh
 
-# Check if stdout is a terminal. If it is, disable colored output.
-if ! [ -t 1 ]; then
-  ERROR="\033[31m" # Red
-  WARN="\033[33m"  # Yellow
-  OK="\033[32m"    # Green
-  CCEND="\033[0m"  # No Color (CCEND= "Color Code End")
-else
-  ERROR=
-  WARN=
-  OK=
-  CCEND=
-fi
+# Check dependencies
+check-deps awslocal
 
 # Accepts the input filename as the first and only positional argument
 input_file=${1-}
 if [ "$input_file" == "" ]; then
-  printf "%sError: The data file path should be passed as an argument. Quitting.%s" "$ERROR" "$CCEND"
-  exit 1
+  print-error "Error: The data file path should be passed as an argument. Quitting." exit
 fi
 
-# Determine max depth
+# Max depth for OU nesting is 5 (AWS Organizations limit)
 #
 # Logic:
 #
@@ -59,13 +47,12 @@ fi
 # Read data from input file into variable
 ou_path_data=$(<$input_file)
 
-ou_max_depth=0
+ou_max_depth=5
 declare -a ou_array=()
 
 for path in $(echo $ou_path_data); do
   declare -a path_as_array=()
   IFS='/' read -r -a path_as_array <<< "$path"
-  ou_array+=$path_as_array
 done
 
-printf "%s%s: %d%s" "$OK" "Discovered OUs" "$CCEND"
+for 

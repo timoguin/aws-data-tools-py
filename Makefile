@@ -14,9 +14,6 @@ endef
 export INFO
 #==============================================================================
 
-# Running make with no arguments prints help content
-.PHONY: default
-default : help
 
 test : deps ## 
 	@printf "${OK}%s...\n${CCEND}" "Starting localstack"
