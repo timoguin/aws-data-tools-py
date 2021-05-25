@@ -83,10 +83,11 @@ class AWSOrganizationOUs:
 
     @classmethod
     def init(self, parent_id: str, *args, **kwargs):
-        child_ous = AWSOrganizationOUs.fetch_data(parent_id).get("children")
+        # child_ous = AWSOrganizationOUs.fetch_data(parent_id).get("children")
+        child_ous = AWSOrganizationOUs.fetch_data(parent_id)
         ous = []
         for ou in child_ous:
-            ous.append(AWSOrganizationOU.init(organizational_unit_id=ou['id']))
+            ous.append(AWSOrganizationOU.init(id=ou['id'], parent_id=parent_id))
         return from_dict(data_class=AWSOrganizationOUs, data={'ous': ous})
 
 
@@ -169,21 +170,22 @@ class AWSOrganization:
     master_account_email: str
     master_account_id: str
 
-    root_id: Optional[str]
+    root: Optional[AWSOrganizationRoot]
+    ou_tree: Optional[Dict[str, list[AWSOrganizationOU]]]
     ous: Optional[list[AWSOrganizationOU]]
     accounts: Optional[list[AWSOrganizationAccount]]
 
     # accounts_from_root: bool = True
 
     @staticmethod
-    def fetch_data():
+    def __fetch_data():
         data = api('organizations:describe_organization')
         return data.get('organization')
 
     @classmethod
-    def init(self, **kwargs: Optional[dict]):
+    def Init(self, **kwargs: Optional[dict]):
         # self.accounts_from_root = kwargs.get('accounts_from_root', True)
-        data = AWSOrganization.fetch_data()
+        data = AWSOrganization.__fetch_data()
         return from_dict(data_class=AWSOrganization, data=data)
 
     def as_dict(self):
@@ -198,14 +200,14 @@ class AWSOrganization:
     def print_json(self):
         print(self.as_json())
 
-    def get_root_id(self):
-        roots = asdict(AWSOrganizationRoots.init()).get('roots')
-        self.root_id = roots[0]['id']
+    def get_root(self):
+        self.root = AWSOrganizationRoots.init().roots[0]
+        self.root_id = self.root.id
 
-    def get_ous(self):
+    def get_root_ous(self):
         # Get data from root of the Organization
         data = AWSOrganizationOUs.fetch_data(parent_id=self.root_id)
-        self.ous = data
+        self.root_ous = data
         # # Get data from
         # ous = AWSOrganizationOUs.init(parent_id=self.root_id)
         # self.ous = ous
@@ -215,8 +217,26 @@ class AWSOrganization:
         # if self.accounts_from_root:
         #   data = AWSOrganizationAccounts.fetch_data()
         # else:
-        #     raise Exception("Not implemented. Remove accounts_from_root kwarg")  #noqa
+        #   child_type=child_type)
+        #   raise Exception("Not implemented. Remove accounts_from_root kwarg")  #noqa
         self.accounts = data
+
+    def build_ou_tree(self, parents=None, depth=1, maxdepth=5):
+        if depth > maxdepth:
+            return
+        if parents is None:
+            parents = [self.root]
+        if self.ou_tree is None:
+            self.ou_tree = {}
+        if self.ous is None:
+            self.ous = []
+        children = []
+        for parent in parents:
+            parent_children = AWSOrganizationOUs.init(parent_id=parent.id).ous
+            children.extend(parent_children)
+            self.ous.extend(parent_children)
+            self.ou_tree.update({parent.id: parent_children})
+        self.build_ou_tree(parents=children, depth=depth+1)
 
     @staticmethod
     def list_children_for_parent(parent_id: str, child_type: str):
@@ -224,11 +244,21 @@ class AWSOrganization:
         #                parent_id=parent_id,
         #                child_type=child_type).get('children')
         # return [child['id'] for child in children]
-        children = paged_api('organizations:list_children',
-                             'children',
-                             parent_id=parent_id,
-                             child_type=child_type)
-        return [child['id'] for child in children]
+        if child_type == 'account':
+            api_call = "list_accounts_for_parent"
+            ret_key = 'accounts'
+        elif child_type == "organizational_unit":
+            api_call = 'list_organizational_units_for_parent'
+            ret_key = 'organizational_units'
+        else:
+            raise Exception(f'Invalid child type {child_type}. Must be one of account organizational unit')
+        children = paged_api(f'organizations:{api_call}',
+                             key=ret_key,
+                             parent_id=parent_id)
+        # children = api(f'organizations:{api_call}',
+        #                parent_id=parent_id)
+        # return [child['id'] for child in children]
+        return children
 
     # def get_ous(self):
     #     # - must first know the root id
@@ -238,7 +268,7 @@ class AWSOrganization:
     #     return asdict(AWSOrganizationOUs.init())
 
     def __post_init__(self):
-        self.get_root_id()
+        self.get_root()
         # if not self.accounts_from_root:
         #     self.get_ous()
         self.get_accounts()

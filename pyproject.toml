@@ -12,6 +12,7 @@ dacite = "^1.6.0"
 pyhumps = "^1.6.1"
 ipdb = "^0.13.7"
 click = "^7.1.2"
+notebook = "^6.4.0"
 
 [tool.poetry.dev-dependencies]
 notebook = "^6.2.0"

@@ -14,9 +14,34 @@ endef
 export INFO
 #==============================================================================
 
+.PHONY: default
+default: help
+
+.PHONY: venv
+venv: pyproject.toml poetry.lock .venv-activate ## Activate Python venv
+	test -d .venv || echo "Creating Python venv" && python -m venv .venv
+		source .venv/bin/activate && \
+		deactivate() { exit; } && \
+		export -f deactivate && \
+		exec bash
+
+.PHONY: .venv-activate
+.venv-activate:
+	test -d .venv || echo "Creating Python venv" && python -m venv .venv
+	echo "Installing Python dependencies" && poetry install --no-root --remove-untracked --quiet
+
+pyproject.toml:
+	poetry init
+
+poetry.lock:
+	poetry install
+
+clean:
+	# @rm -rf .venv
+	@find . -iname '*.pyc' -exec rm {} \;
 
 test : deps ## 
-	@printf "${OK}%s...\n${CCEND}" "Starting localstack"
+	@printf "${OK}%s...\n${CCEND}" "Starting motoserver"
 	@docker-compose --log-level ERROR up --detach >/dev/null
 	@pushd tests >/dev/null && ./test.sh && popd >/dev/null || popd >/dev/null
 
