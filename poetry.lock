@@ -1209,15 +1209,15 @@ optional = true
 python-versions = "*"
 
 [extras]
-all = ["click", "ipdb", "mkdocs", "mkdocs-git-revision-date-localized-plugin", "mkdocs-macros-plugin", "mkdocs-material", "notebook", "pre-commit"]
-cli = ["click"]
+all = ["click", "ipdb", "mkdocs", "mkdocs-git-revision-date-localized-plugin", "mkdocs-macros-plugin", "mkdocs-material", "notebook", "pre-commit", "structlog"]
+cli = ["click", "structlog"]
 devtools = ["ipdb", "notebook", "pre-commit"]
 docs = ["mkdocs", "mkdocs-git-revision-date-localized-plugin", "mkdocs-macros-plugin", "mkdocs-material"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<4"
-content-hash = "2f5319abb21dc96c95b441b49ddb25403f4c1031cad1fc9e727cdb341592ef78"
+content-hash = "48ea17ec24a598c7b4632394099109816ccb2e074d7d3952606649e3fd3ce9d6"
 
 [metadata.files]
 appdirs = [
