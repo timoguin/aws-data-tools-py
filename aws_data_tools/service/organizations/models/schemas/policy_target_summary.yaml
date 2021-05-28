@@ -1,0 +1,32 @@
+# Represents a policy target summary.
+#
+# Contains information about a root, OU, or account that a policy is attached to.
+---
+title: Policy Target Summary
+type: object
+
+properties:
+    
+    arn:
+        description: The Amazon Resource Name (ARN) of the policy target
+        type: string
+        # pattern: ^arn:aws:organizations::.+:.+
+  
+  
+    target_id:
+        description: The unique identifier (ID) of the policy target
+        type: string
+        # pattern: ^(r-[0-9a-z]{4,32})|(\d{12})|(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})$
+  
+    name:
+        description: The friendly name of the policy target
+        type: string
+        # pattern: [\s\S]*
+  
+    type:
+        description: The type of the policy target
+        type: string
+        enum:
+            - ACCOUNT
+            - ORGANIZATIONAL_UNIT
+            - ROOT

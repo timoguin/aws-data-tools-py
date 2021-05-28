@@ -1,0 +1,22 @@
+title: Policy
+type: object
+
+properties:
+
+    content:
+        description: The text content of the policy
+        type: string
+
+    policy_summary: 
+        description: A structure that contains additional details about the policy
+        $ref: memory:PolicySummary
+
+    tags:
+        description: A list of tag objects associated with the policy
+        type: array
+        items: {"$ref": "memory:Tag"}
+
+    targets:
+        description: A list of attached policy targets
+        type: array
+        items: {"$ref": "memory:PolicyTargetSummary"}

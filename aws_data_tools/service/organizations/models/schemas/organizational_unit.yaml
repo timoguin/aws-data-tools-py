@@ -1,0 +1,51 @@
+# Represents an organizational unit for an organization. Includes associated tags, the
+# parent entity, children, and policies.
+---
+title: Organizational Unit
+type: object
+
+properties:
+
+    arn:
+        description: The Amazon Resource Name (ARN) of this OU
+        type: string
+        # pattern: ^arn:aws:organizations::\d{12}:ou\/o-[a-z0-9]{10,32}\/ou-[0-9a-z]{4,32}-[0-9a-z]{8,32}
+
+    id:
+        descriptio: The unique identifier (ID) associated with the OU
+        type: string
+        # pattern: ^ou-[0-9a-z]{4,32}-[a-z0-9]{8,32}$
+
+    name:
+        description: The friendly name of the OU
+        type: string
+        # pattern: [\s\S]*
+
+    tags:
+        description: A list of tag objects associated with the OU
+        type: array
+        items: {"$ref": "memory:Tag"}
+
+    children:
+        description: A list of child entities associated with the OU
+        type: array
+        items: {"$ref": "memory:Child"}
+
+    effective_policies:
+        description: A list of effective policy objects associated with the account
+        type: array
+        items: {"$ref": "memory:EffectivePolicy"}
+
+    parent:
+        description: The parent entity associated with the OU
+        $ref: memory:Parent
+
+    policies:
+        description: A list of policy objects associated with the OU
+        type: array
+        items: {"$ref": "memory:Policy"}
+
+required:
+    - arn
+    - id
+    - name

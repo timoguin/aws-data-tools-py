@@ -1,0 +1,57 @@
+# Represents the root of an AWS Organization. Includes any associated tags, children,
+# and policies.
+---
+title: Root
+type: object
+
+properties:
+
+    arn:
+        description: The ARN for the root of the organization
+        type: string
+        # pattern: ^arn:aws:organizations::\d{12}:root\/o-[a-z0-9]{10,32}\/r-[0-9a-z]{4,32}
+      
+    id:
+        description: The ID of the root object for the organization
+        type: string
+        # pattern: ^r-[0-9a-z]{4,32}$
+      
+    name:
+        description: The name of the organization root
+        type: string
+        # pattern: [\s\S]*
+      
+    policy_types:
+        description: A list of policy type summaries for the organization root
+        type: array
+        items: {"$ref": "memory:PolicyTypeSummary"}
+
+    tags:
+        description: A list of tag objects associated with the root
+        type: array
+        items: {"$ref": "memory:Tag"}
+
+    effective_policies:
+        description: A list of effective policy objects associated with the account
+        type: array
+        items: {"$ref": "memory:EffectivePolicy"}
+
+    children:
+        description: A list of child entities associated with the root
+        type: array
+        items: {"$ref": "memory:Child"}
+
+    parent:
+      description: The parent entity of the root (the organization ID)
+      $ref: memory:Parent
+
+    policies:
+        description: A list of policy objects associated with the root
+        type: array
+        items: {"$ref": "memory:Policy"}
+
+required:
+    - arn
+    - id
+    - name
+    - policy_types

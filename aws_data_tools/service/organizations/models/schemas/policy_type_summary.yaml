@@ -1,0 +1,22 @@
+# Represents the status of an organization policy type
+---
+title: Policy Type Summary
+type: object
+
+properties:
+
+    status:
+        description: The availability status of a policy type
+        type: string
+        enum: ["ENABLED", "PENDING_ENABLE", "PENDING_DISABLE"]
+
+    type:
+        description: The type of the policy
+        type: string
+        enum:
+            - AISERVICES_OPT_OUT_POLICY
+            - BACKUP_POLICY
+            - SERVICE_CONTROL_POLICY
+            - TAG_POLICY
+
+required: ["status", "type"]

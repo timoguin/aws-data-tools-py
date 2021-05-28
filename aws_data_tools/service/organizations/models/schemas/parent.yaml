@@ -1,0 +1,18 @@
+# Represents a parent entity in an organization.
+#
+# This schema adds an additional ORGANIZATION option for the "type" property. This
+# allows a Root object to also have a parent property to store the organization ID.
+---
+title: Parent
+type: object
+
+properties:
+
+    id:
+        description: The unique identifier (ID) for the parent entity
+        type: string
+
+    type:
+        description: The type of the parent entity
+        type: string
+        enum: ["ROOT", "ORGANIZATIONAL_UNIT"]

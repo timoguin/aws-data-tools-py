@@ -1,0 +1,72 @@
+# Represents an AWS Organization, including associated nodes and edges (i.e., the root,
+# OUs policies, and accounts).
+---
+title: Organization
+type: object
+
+properties:
+
+    arn:
+        description: The Amazon Resource Name (ARN) of the organization.
+        type: string
+        # pattern: ^arn:aws:organizations::\d{12}:organization\/o-[a-z0-9]{10,32}
+
+    available_policy_types:
+        description: A list of policy type summaries for the organization
+        type: array
+        items: {"$ref": "memory:PolicyTypeSummary"}
+
+    feature_set:
+        description: The features enabled for the organization
+        type: string
+        enum: ["ALL", "CONSOLIDATED_BILLING"]
+
+    id:
+        description: The unique identifier (ID) of the organization
+        type: string
+        # pattern: ^o-[a-z0-9]{10,32}$
+
+    master_account_arn:
+        description: The ARN of the master account of the organization
+        type: string
+        # pattern: ^arn:aws:organizations::\d{12}:account\/o-[a-z0-9]{10,32}\/\d{12}
+
+    master_account_email:
+        description: The root email for the master account of the organization
+        type: string
+        # pattern: [^\s@]+@[^\s@]+\.[^\s@]+
+
+    master_account_id:
+        description: The account ID for the master account of the organization
+        type: string
+        # pattern: ^\d{12}$
+
+    Accounts:
+        description: A list of account objects for the organization
+        type: array
+        items: {"$ref": "memory:Account"}
+
+    OUs:
+        description: A list of OU objects for the organization
+        type: array
+        items: {"$ref": "memory:OrganizationalUnit"}
+
+    Policies:
+        description: A list of policy objects for the organization
+        type: array
+        items: {"$ref": "memory:Policy"}
+
+    # TODO: Should we define this as a list of Root objects, since that is what's
+    # returned by the ListRoots API call? Although there is only one root in an
+    # organization, their API leaves potential for that to change.
+    Root:
+        description: The root object of the organization
+        $ref: memory:Root
+
+required:
+    - arn
+    - feature_set
+    - id
+    - master_account_arn
+    - master_account_email
+    - master_account_id

@@ -1,0 +1,39 @@
+# Represents details about a policy
+---
+title: Policy Summary
+type: object
+
+properties:
+
+    arn:
+        description: The Amazon Resource Name (ARN) of the policy
+        type: string
+        # pattern: ^(arn:aws:organizations::\d{12}:policy\/o-[a-z0-9]{10,32}\/[0-9a-z_]+\/p-[0-9a-z]{10,32})|(arn:aws:organizations::aws:policy\/[0-9a-z_]+\/p-[0-9a-zA-Z_]{10,128})
+  
+    aws_managed:
+        description: Specifies if the policy is an AWS managed policy
+        type: boolean
+  
+    description:
+        description: The description of the policy
+        type: string
+        # pattern: [\s\S]*
+  
+    id:
+        description: The unique identifier (ID) of the policy
+        type: string
+        # pattern: ^p-[0-9a-zA-Z_]{8,128}$
+  
+    name:
+        description: The friendly name of the policy
+        type: string
+        # pattern: [\s\S]*
+  
+    type:
+        description: 
+        type: string
+        enum:
+            - AISERVICES_OPT_OUT_POLICY
+            - BACKUP_POLICY
+            - SERVICE_CONTROL_POLICY
+            - TAG_POLICY
