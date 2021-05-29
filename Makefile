@@ -10,7 +10,7 @@ shell: venv ## Activate the Python virtual environment in a subshell
 .PHONY: venv
 venv:
 	test -d .venv || python -m venv .venv && .venv/bin/pip install --quiet --upgrade pip
-	poetry install --remove-untracked --extras=all --quiet --no-interaction || rm -rf .venv
+	poetry install --extras="devtools docs" --no-interaction
 
 .PHONY: clean
 clean:
