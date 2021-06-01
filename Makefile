@@ -58,7 +58,7 @@ python-update-deps: .venv
 
 .PHONY: clean ## Remove temp files and build artifacts
 clean:
-	@find . \( -iname '*.pyc' \) -o \( -name '__pycache__' \) -exec rm -rf {} \;
+	@find . \( -iname '*.pyc' -o -name '__pycache__' \) -path './aws_data_tools/*' -exec rm -rf {} \+ || true; >/dev/null 2>&1
 	@poetry install --remove-untracked --quiet 
 
 .PHONY: clean-all ## Run clean, remove the Python venv and untracked / ignored Git files
