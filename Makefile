@@ -63,12 +63,15 @@ python-update-lock:
 
 .PHONY: clean ## Remove temp files and build artifacts
 clean:
-	@find . \( -iname '*.pyc' -o -name '__pycache__' \) -path './aws_data_tools/*' -exec rm -rf {} \+ || true; >/dev/null 2>&1
+	@find . -path ./${VENV_DIR} -prune -false -o -type f -iname '*.pyc' -delete
+	@find . -path ./${VENV_DIR} -prune -false -o         \
+	   -type d \( -name 'dist' -o -name '__pycache__' \) \
+	   -exec rm -rf "{}" +
 	@poetry install --remove-untracked --quiet 
 
 .PHONY: clean-all ## Run clean, remove the Python venv and untracked / ignored Git files
 clean-all: clean
-	@git clean --quiet --force -d -x -X
+	@git clean --quiet --force -d -f -x
 	@docker-compose down --rmi 'all' --volumes --remove-orphans
 
 .PHONY: help
