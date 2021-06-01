@@ -31,7 +31,7 @@ class ModelFactory:
 
     def __build_models(self):
         builder = ObjectBuilder(self.schema)
-        self.models = builder.build_classes(named_only=True)
+        self.models = builder.build_classes(named_only=False)
 
     def __post_init__(self):
         self.__load_schema()
@@ -46,7 +46,7 @@ class APIClient:
     """
     service: str
     client: BaseClient = field(default=None)
-    models: Namespace = field(default=None)
+    schema_models: Namespace = field(default=None)
     schema: Dict[str, Any] = field(default=None)
     session: Session = field(default_factory=Session)
 
@@ -77,9 +77,13 @@ class APIClient:
             response = getattr(self.client, func)(**kwargs)
             return depascalize(response)
 
+    @classmethod
+    def init(cls, service: str):
+        return cls(service)
+
     def __post_init__(self):
         schema_path = DEFAULT_SCHEMAS_DIR / f'{self.service}.yaml'
         model_factory = ModelFactory(schema_path=schema_path)
-        self.models = model_factory.models
+        self.schema_models = model_factory.models
         self.schema = model_factory.schema
         self.client = self.session.client(self.service)

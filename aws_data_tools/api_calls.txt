@@ -1,0 +1,12 @@
+API calls:
+
+- describe org (1 API call)
+- list roots (1 API call)
+- list OU children for root (1 API call)
+- list OU children for all OUs recursively (24-36 API calls)
+- list account children (for root and all OUs) (25-37 API calls)
+- list policies for organization (minimum 1 API call)
+- list tags for all resources: root, OUs, policies, accounts (200+ API calls)
+- describe effect policies for root, OUs, and accounts (200+ API calls)
+
+~500 API calls

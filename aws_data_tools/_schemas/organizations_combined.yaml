@@ -6,27 +6,38 @@ type: object
 oneOf:
     - {"$ref": "#/definitions/Account"}
     - {"$ref": "#/definitions/Child"}
-    - {"$ref": "#/definitions/EffectivePolicy"}
     - {"$ref": "#/definitions/Organization"}
     - {"$ref": "#/definitions/OrganizationalUnit"}
     - {"$ref": "#/definitions/Parent"}
     - {"$ref": "#/definitions/Policy"}
-    - {"$ref": "#/definitions/PolicySummary"}
-    - {"$ref": "#/definitions/PolicyTargetSummary"}
-    - {"$ref": "#/definitions/PolicyTypeSummary"}
     - {"$ref": "#/definitions/Root"}
-    - {"$ref": "#/definitions/Tag"}
 definitions:
     Account:
         title: Account
         id: Account
         type: object
-        # required: ["meta"]
+        required: ["meta"]
         properties:
             effective_policies:
                 description: A list of effective policy objects associated with the account
                 type: array
-                items: {"$ref": "#/definitions/EffectivePolicy"}
+                items:
+                    type: object
+                    required: ["last_updated_timestamp", "policy_content", "policy_type", "target_id"]
+                    properties:
+                        last_updated_timestamp:
+                            description: The time of the last update to the policy
+                            type: string
+                        policy_content:
+                            description: The text content of the policy
+                            type: string
+                        policy_type:
+                            description: The type of the policy
+                            type: string
+                            enum: ["AISERVICES_OPT_OUT_POLICY", "BACKUP_POLICY", "TAG_POLICY"]
+                        target_id:
+                            description: The unique identifier (ID) of the policy target
+                            type: string
             meta:
                 description: Metadata for the account
                 type: object
@@ -65,7 +76,16 @@ definitions:
             tags:
                 description: A list of tag objects associated with the account
                 type: array
-                items: {"$ref": "#/definitions/Tag"}
+                items:
+                    type: object
+                    required: ["key", "value"]
+                    properties:
+                        key:
+                          description: The tag key
+                          type: string
+                        value:
+                          description: The tag value
+                          type: string
 
     Child:
         title: Child
@@ -79,33 +99,13 @@ definitions:
             type:
                 description: The type of the child
                 type: string
-                enum: ["ACCOUNT", "ORGANIZATIONAL_UNIT", "ROOT"]
-
-    EffectivePolicy:
-        title: Effective Policy
-        id: EffectivePolicy
-        type: object
-        required: ["last_updated_timestamp", "policy_content", "policy_type", "target_id"]
-        properties:
-            last_updated_timestamp:
-                description: The time of the last update to the policy
-                type: string
-            policy_content:
-                description: The text content of the policy
-                type: string
-            policy_type:
-                description: The type of the policy
-                type: string
-                enum: ["AISERVICES_OPT_OUT_POLICY", "BACKUP_POLICY", "TAG_POLICY"]
-            target_id:
-                description: The unique identifier (ID) of the policy target
-                type: string
+                enum: ["ACCOUNT", "ORGANIZATIONAL_UNIT"]
 
     Organization:
         title: Organization
         id: Organization
         type: object
-        # required: ["meta"]
+        required: ["meta"]
         properties:
             accounts:
                 description: A list of account objects for the organization
@@ -156,7 +156,7 @@ definitions:
         title: Organizational Unit
         id: OrganizationalUnit
         type: object
-        # required: ["meta"]
+        required: ["meta"]
         properties:
             meta:
                 description: Metadata for the organizational unit
@@ -179,7 +179,23 @@ definitions:
             effective_policies:
                 description: A list of effective policy objects associated with the account
                 type: array
-                items: {"$ref": "#/definitions/EffectivePolicy"}
+                items:
+                    type: object
+                    required: ["last_updated_timestamp", "policy_content", "policy_type", "target_id"]
+                    properties:
+                        last_updated_timestamp:
+                            description: The time of the last update to the policy
+                            type: string
+                        policy_content:
+                            description: The text content of the policy
+                            type: string
+                        policy_type:
+                            description: The type of the policy
+                            type: string
+                            enum: ["AISERVICES_OPT_OUT_POLICY", "BACKUP_POLICY", "TAG_POLICY"]
+                        target_id:
+                            description: The unique identifier (ID) of the policy target
+                            type: string
             parent:
                 description: The parent entity associated with the OU
                 $ref: "#/definitions/Parent"
@@ -190,7 +206,16 @@ definitions:
             tags:
                 description: A list of tag objects associated with the OU
                 type: array
-                items: {"$ref": "#/definitions/Tag"}
+                items:
+                    type: object
+                    required: ["key", "value"]
+                    properties:
+                        key:
+                          description: The tag key
+                          type: string
+                        value:
+                          description: The tag value
+                          type: string
 
     Parent:
         title: Parent
@@ -204,7 +229,7 @@ definitions:
             type:
                 description: The type of the parent entity
                 type: string
-                enum: ["ROOT", "ORGANIZATION", "ORGANIZATIONAL_UNIT"]
+                enum: ["ROOT", "ORGANIZATIONAL_UNIT"]
 
     Policy:
         title: Policy
@@ -217,82 +242,67 @@ definitions:
                 type: string
             policy_summary: 
                 description: A structure that contains additional details about the policy
-                $ref: "#/definitions/PolicySummary"
-            tags:
-                description: A list of tag objects associated with the policy
-                type: array
-                items: {"$ref": "#/definitions/Tag"}
-            targets:
-                description: A list of attached policy targets
-                type: array
-                items: {"$ref": "#/definitions/PolicyTargetSummary"}
-
-    PolicySummary:
-        title: Policy Summary
-        id: PolicySummary
-        type: object
-        required: ["arn", "aws_managed", "description", "id", "name", "type"]
-        properties:
-            arn:
-                description: The Amazon Resource Name (ARN) of the policy
-                type: string
-            aws_managed:
-                description: Specifies if the policy is an AWS managed policy
-                type: boolean
-            description:
-                description: The description of the policy
-                type: string
-            id:
-                description: The unique identifier (ID) of the policy
-                type: string
-            name:
-                description: The friendly name of the policy
-                type: string
-            type:
-                description: The type of the policy
-                type: string
-                enum: ["AISERVICES_OPT_OUT_POLICY", "BACKUP_POLICY", "SERVICE_CONTROL_POLICY", "TAG_POLICY"]
-
-    PolicyTargetSummary:
-        title: Policy Target Summary
-        id: PolicyTargetSummary
-        type: object
-        required: ["arn", "target_id", "name", "type"]
-        properties:
-            arn:
-                description: The Amazon Resource Name (ARN) of the policy target
-                type: string
-            target_id:
-                description: The unique identifier (ID) of the policy target
-                type: string
-            name:
-                description: The friendly name of the policy target
-                type: string
-            type:
-                description: The type of the policy target
-                type: string
-                enum: ["ACCOUNT", "ORGANIZATIONAL_UNIT", "ROOT"]
-
-    PolicyTypeSummary:
-        title: Policy Type Summary
-        id: PolicyTypeSummary
-        type: object
-        required: ["status", "type"]
-        properties:
-            status:
-                description: The availability status of a policy type
-                type: string
-                enum: ["ENABLED", "PENDING_ENABLE", "PENDING_DISABLE"]
-            type:
-                description: The type of the policy
-                type: string
-                enum: ["AISERVICES_OPT_OUT_POLICY", "BACKUP_POLICY", "SERVICE_CONTROL_POLICY", "TAG_POLICY"]
+                type: object
+                required: ["arn", "aws_managed", "description", "id", "name", "type"]
+                properties:
+                    arn:
+                        description: The Amazon Resource Name (ARN) of the policy
+                        type: string
+                    aws_managed:
+                        description: Specifies if the policy is an AWS managed policy
+                        type: boolean
+                    description:
+                        description: The description of the policy
+                        type: string
+                    id:
+                        description: The unique identifier (ID) of the policy
+                        type: string
+                    name:
+                        description: The friendly name of the policy
+                        type: string
+                    type:
+                        description: The type of the policy
+                        type: string
+                        enum: ["AISERVICES_OPT_OUT_POLICY", "BACKUP_POLICY", "SERVICE_CONTROL_POLICY", "TAG_POLICY"]
+                    tags:
+                        description: A list of tag objects associated with the policy
+                        type: array
+                        items:
+                            type: object
+                            required: ["key", "value"]
+                            properties:
+                                key:
+                                  description: The tag key
+                                  type: string
+                                value:
+                                  description: The tag value
+                                  type: string
+                    targets:
+                        description: A list of attached policy targets
+                        type: array
+                        items:
+                            type: object
+                            required: ["arn", "target_id", "name", "type"]
+                            properties:
+                                arn:
+                                    description: The Amazon Resource Name (ARN) of the policy target
+                                    type: string
+                                target_id:
+                                    description: The unique identifier (ID) of the policy target
+                                    type: string
+                                name:
+                                    description: The friendly name of the policy target
+                                    type: string
+                                type:
+                                    description: The type of the policy target
+                                    type: string
+                                    enum: ["ACCOUNT", "ORGANIZATIONAL_UNIT", "ROOT"]
 
     Root:
         title: Root
         id: Root
         type: object
-        # required: ["meta"]
+        required: ["meta"]
         properties:
             children:
                 description: A list of child entities associated with the root
@@ -301,7 +311,23 @@ definitions:
             effective_policies:
                 description: A list of effective policy objects associated with the account
                 type: array
-                items: {"$ref": "#/definitions/EffectivePolicy"}
+                items:
+                    type: object
+                    required: ["last_updated_timestamp", "policy_content", "policy_type", "target_id"]
+                    properties:
+                        last_updated_timestamp:
+                            description: The time of the last update to the policy
+                            type: string
+                        policy_content:
+                            description: The text content of the policy
+                            type: string
+                        policy_type:
+                            description: The type of the policy
+                            type: string
+                            enum: ["AISERVICES_OPT_OUT_POLICY", "BACKUP_POLICY", "TAG_POLICY"]
+                        target_id:
+                            description: The unique identifier (ID) of the policy target
+                            type: string
             meta:
                 definition: Metadata for the root
                 type: object
@@ -319,28 +345,35 @@ definitions:
                     policy_types:
                         description: A list of policy type summaries for the organization root
                         type: array
-                        items: {"$ref": "#/definitions/PolicyTypeSummary"}
-            parent:
-                description: The parent entity of the root (the organization ID)
-                $ref: "#/definitions/Parent"
-            policies:
-                description: A list of policy objects associated with the root
-                type: array
-                items: {"$ref": "#/definitions/Policy"}
-            tags:
-                description: A list of tag objects associated with the root
-                type: array
-                items: {"$ref": "#/definitions/Tag"}
-
-    Tag:
-        title: Tag
-        id: Tag
-        type: object
-        required: ["key", "value"]
-        properties:
-            key:
-              description: The tag key
-              type: string
-            value:
-              description: The tag value
-              type: string
+                        items:
+                            type: object
+                            required: ["status", "type"]
+                            properties:
+                                status:
+                                    description: The availability status of a policy type
+                                    type: string
+                                    enum: ["ENABLED", "PENDING_ENABLE", "PENDING_DISABLE"]
+                                type:
+                                    description: The type of the policy
+                                    type: string
+                                    enum: ["AISERVICES_OPT_OUT_POLICY", "BACKUP_POLICY", "SERVICE_CONTROL_POLICY", "TAG_POLICY"]
+                                parent:
+                                    description: The parent entity of the root (the organization ID)
+                                    $ref: "#/definitions/Parent"
+                                policies:
+                                    description: A list of policy objects associated with the root
+                                    type: array
+                                    items: {"$ref": "#/definitions/Policy"}
+                                tags:
+                                    description: A list of tag objects associated with the root
+                                    type: array
+                                    items:
+                                        type: object
+                                        required: ["key", "value"]
+                                        properties:
+                                            key:
+                                              description: The tag key
+                                              type: string
+                                            value:
+                                              description: The tag value
+                                              type: string
