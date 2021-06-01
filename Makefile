@@ -1,6 +1,7 @@
 DEPS :=awk docker docker-compose grep poetry realpath sed
 AWS_OKTA_PROFILE :=
 PY_INSTALL_ARGS :=--extras="cli devtools docs"
+VENV_DIR :=.venv
 
 ifneq (${AWS_OKTA_PROFILE},)
 	SHELL_CMD_PREFIX =aws-okta exec ${AWS_OKTA_PROFILE} --
@@ -10,8 +11,8 @@ endif
 default: help
 
 .PHONY: shell ## Activate the Python virtual environment in a subshell
-shell: .venv
-	@${SHELL_CMD_PREFIX} poetry shell
+shell: ${VENV_DIR}
+	@${SHELL_CMD_PREFIX} poetry shell --quiet --no-interaction
 
 .PHONY: test-integration ## Run the integration test suite
 test-integration: run-test-server
@@ -39,22 +40,26 @@ stop-test-server:
 	@docker-compose down --remove-orphans --volumes
 
 .PHONY: build ## Build the Python package for distribution
-build: .venv
+build: ${VENV_DIR}
 	@poetry build --quiet --no-interaction
 
 # Ensures the Python venv exists and has dependencies installed
-.venv:
-	@python -m venv .venv >/dev/null
-	@.venv/bin/pip install --quiet --upgrade pip
+${VENV_DIR}:
+	@python -m venv ${VENV_DIR} >/dev/null
+	@${VENV_DIR}/bin/pip install --quiet --upgrade pip
 	@make python-install-deps
 
 .PHONY: python-install-deps ## Install Python dependencies in the venv
-python-install-deps: .venv
+python-install-deps: ${VENV_DIR}
 	@poetry install --quiet --no-interaction ${PY_INSTALL_ARGS}
 
 .PHONY: python-update-deps ## Update Python dependencies in the venv
-python-update-deps: .venv
+python-update-deps: ${VENV_DIR}
 	@poetry update --quiet --no-interaction
+
+.PHONY: python-update-lock ## Update Python dependency lock file
+python-update-lock:
+	@poetry update --quiet --no-interaction --lock
 
 .PHONY: clean ## Remove temp files and build artifacts
 clean:
