@@ -1,34 +1,7 @@
 version: "3.9"
 
 services:
-  localstack:
-    image: ${IMAGE_NAME-localstack/localstack}:${IMAGE_TAG-0.12.7}
-    network_mode: bridge
-    ports:
-      - "53:53"
-      - "443:443"
-      - "4510-4520:4510-4520"
-      - "4566-4620:4566-4620"
-      - "${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}"
-    environment:
-      # Localstack Pro is necessary for Organizations support
-      LOCALSTACK_API_KEY:
-      SERVICES: iam,organizations
-      DATA_DIR: /tmp/localstack/data
-      DOCKER_HOST: unix:///var/run/docker.sock
-      PORT_WEB_UI: ${PORT_WEB_UI- }
-      TEST_AWS_ACCOUNT_ID: 000000000001
-      DEBUG: 0
-      ENFORCE_IAM: 0
-      # The following aren't used, but included for reference and possible future use
-      LAMBDA_EXECUTOR: ${LAMBDA_EXECUTOR- }
-      KINESIS_ERROR_PROBABILITY: ${KINESIS_ERROR_PROBABILITY- }
-      # TODO: Still testing others
-      # HOST_TMP_FOLDER: /private${TMPDIR}
-      # DNS_ADDRESS: 0
-    volumes:
-      # TODO: Update this to be cross-platform. OS X requires using /private because
-      # /tmp is symlinked to /private/tmp, which can't be access by Localstack.
-      - "/private/tmp/localstack:/tmp/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"
-      - "$PWD/initaws.d:/docker-entrypoint-initaws.d"
+  motoserver:
+    container_name: adt_motoserver
+    image: ${IMAGE_NAME-motoserver/moto}:${IMAGE_TAG-2.0.5}
+    ports: ["5000:5000"]
