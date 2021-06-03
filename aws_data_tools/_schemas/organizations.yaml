@@ -21,40 +21,35 @@ definitions:
         title: Account
         id: Account
         type: object
-        # required: ["meta"]
+        required: ["arn", "email", "id", "joined_method", "joined_timestamp", "name", "status"]
         properties:
             effective_policies:
                 description: A list of effective policy objects associated with the account
                 type: array
                 items: {"$ref": "#/definitions/EffectivePolicy"}
-            meta:
-                description: Metadata for the account
-                type: object
-                required: ["arn", "email", "id", "joined_method", "joined_timestamp", "name", "status"]
-                properties:
-                    arn:
-                        description: The Amazon Resource Name (ARN) of the account
-                        type: string
-                    email:
-                        description: The email address associated with AWS account
-                        type: string
-                    id:
-                        description: The unique identifier (ID) of the account
-                        type: string
-                    joined_method:
-                        description: The method by which the account joined the organization
-                        type: string
-                        enum: ["CREATED", "INVITED"]
-                    joined_timestamp:
-                        description: The date the account became a part of the organization
-                        type: string
-                    name:
-                        description: The friendly name of the account
-                        type: string
-                    status:
-                        description: The status of the account in the organization
-                        type: string
-                        enum: ["ACTIVE", "SUSPENDED"]
+            arn:
+                description: The Amazon Resource Name (ARN) of the account
+                type: string
+            email:
+                description: The email address associated with AWS account
+                type: string
+            id:
+                description: The unique identifier (ID) of the account
+                type: string
+            joined_method:
+                description: The method by which the account joined the organization
+                type: string
+                enum: ["CREATED", "INVITED"]
+            joined_timestamp:
+                description: The date the account became a part of the organization
+                type: string
+            name:
+                description: The friendly name of the account
+                type: string
+            status:
+                description: The status of the account in the organization
+                type: string
+                enum: ["ACTIVE", "SUSPENDED"]
             parent:
                 description: The parent entity of the account
                 $ref: "#/definitions/Parent"
@@ -105,40 +100,36 @@ definitions:
         title: Organization
         id: Organization
         type: object
-        # required: ["meta"]
+        required: ["arn", "available_policy_types", "feature_set", "id", "master_account_arn", "master_account_email", "master_account_id"]
         properties:
+            # Required properties
+            arn:
+                description: The Amazon Resource Name (ARN) of the organization.
+                type: string
+            available_policy_types:
+                description: A list of policy type summaries for the organization
+                type: array
+                items: {"$ref": "#/definitions/PolicyTypeSummary"}
+            feature_set:
+                description: The features enabled for the organization
+                type: string
+                enum: ["ALL", "CONSOLIDATED_BILLING"]
+            id:
+                description: The unique identifier (ID) of the organization
+                type: string
+            master_account_arn:
+                description: The ARN of the master account of the organization
+                type: string
+            master_account_email:
+                description: The root email for the master account of the organization
+                type: string
+            master_account_id:
+                description: The account ID for the master account of the organization
+                type: string
             accounts:
                 description: A list of account objects for the organization
                 type: array
                 items: {"$ref": "#/definitions/Account"}
-            meta:
-                description: Metadata for the organization
-                type: object
-                required: ["arn", "available_policy_types", "feature_set", "id", "master_account_arn", "master_account_email", "master_account_id"]
-                properties:
-                    arn:
-                        description: The Amazon Resource Name (ARN) of the organization.
-                        type: string
-                    available_policy_types:
-                        description: A list of policy type summaries for the organization
-                        type: array
-                        items: {"$ref": "#/definitions/PolicyTypeSummary"}
-                    feature_set:
-                        description: The features enabled for the organization
-                        type: string
-                        enum: ["ALL", "CONSOLIDATED_BILLING"]
-                    id:
-                        description: The unique identifier (ID) of the organization
-                        type: string
-                    master_account_arn:
-                        description: The ARN of the master account of the organization
-                        type: string
-                    master_account_email:
-                        description: The root email for the master account of the organization
-                        type: string
-                    master_account_id:
-                        description: The account ID for the master account of the organization
-                        type: string
             organizational_units:
                 description: A list of OU objects for the organization
                 type: array
@@ -156,22 +147,17 @@ definitions:
         title: Organizational Unit
         id: OrganizationalUnit
         type: object
-        # required: ["meta"]
+        required: ["arn", "id", "name"]
         properties:
-            meta:
-                description: Metadata for the organizational unit
-                type: object
-                required: ["arn", "id", "name"]
-                properties:
-                    arn:
-                        description: The Amazon Resource Name (ARN) of this OU
-                        type: string
-                    id:
-                        descriptio: The unique identifier (ID) associated with the OU
-                        type: string
-                    name:
-                        description: The friendly name of the OU
-                        type: string
+            arn:
+                description: The Amazon Resource Name (ARN) of this OU
+                type: string
+            id:
+                descriptio: The unique identifier (ID) associated with the OU
+                type: string
+            name:
+                description: The friendly name of the OU
+                type: string
             children:
                 description: A list of child entities associated with the OU
                 type: array
@@ -188,9 +174,8 @@ definitions:
                 type: array
                 items: {"$ref": "#/definitions/Policy"}
             tags:
-                description: A list of tag objects associated with the OU
-                type: array
-                items: {"$ref": "#/definitions/Tag"}
+                description: A maps of tag objects associated with the OU
+                $ref: "#/definitions/Tag"
 
     Parent:
         title: Parent
@@ -332,11 +317,11 @@ definitions:
                 type: array
                 items: {"$ref": "#/definitions/Tag"}
 
-    Tag:
-        title: Tag
-        id: Tag
+    Tags:
+        title: Tags
+        id: Tags
         type: object
-        required: ["key", "value"]
+
         properties:
             key:
               description: The tag key

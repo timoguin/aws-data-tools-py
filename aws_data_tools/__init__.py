@@ -31,7 +31,7 @@ class ModelFactory:
 
     def __build_models(self):
         builder = ObjectBuilder(self.schema)
-        self.models = builder.build_classes(named_only=False)
+        self.models = builder.build_classes(named_only=True)
 
     def __post_init__(self):
         self.__load_schema()
