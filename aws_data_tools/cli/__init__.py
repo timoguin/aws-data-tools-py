@@ -1,11 +1,14 @@
 import click
 import structlog
-from json import dumps
+from json import dumps as json_dumps
 from traceback import format_exc
 
 from botocore.exceptions import ClientError, NoCredentialsError
 
-from ..models import AWSOrganization
+from ..models.organizations import Organization
+from ..utils import dataclass_to_json
+
+
 structlog.configure(
     processors=[
         structlog.processors.add_log_level,
@@ -52,8 +55,8 @@ def dump_json(ctx, include_accounts):
     errmsg = None
     tb = None
     try:
-        org = AWSOrganization(init_accounts=include_accounts)
-        click.echo(org.as_json())
+        org = Organization()
+        click.echo(dataclass_to_json(org))
     except ClientError as exc_info:
         errmsg = f'Service Error: {str(exc_info)}'
     except NoCredentialsError as exc_info:
@@ -64,4 +67,4 @@ def dump_json(ctx, include_accounts):
     handle_error(ctx, errmsg, tb)
 
 if __name__ == '__main__':
-    cli(obj={})
+    cli(ctx={})
