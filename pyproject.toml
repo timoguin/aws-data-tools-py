@@ -49,6 +49,10 @@ mkdocs = {version = "^1.1.2", optional = true, extras = ["docs"]}
 mkdocs-git-revision-date-localized-plugin = {version = "^0.9.2", optional = true, extras = ["docs"]}
 mkdocs-macros-plugin = {version = "^0.5.5", optional = true, extras = ["docs"]}
 mkdocs-material = {version = "^7.1.5", optional = true, extras = ["docs"]}
+dacite = "^1.6.0"
+dataclasses-serialization = "^1.3.1"
+dataclass-factory = "^2.11"
+pydantic = "^1.8.2"
 
 [tool.poetry.dev-dependencies]
 black = "^21.5b1"

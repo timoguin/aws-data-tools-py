@@ -1,16 +1,16 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
+from typing import Any, ClassVar, Dict, List, Union
 
 from boto3.session import Session
 from botocore.client import BaseClient
 from botocore.paginate import PageIterator, Paginator
 from humps import depascalize, pascalize
-# from marshmallow_dataclass import dataclass
 
 
 __VERSION__ = '0.1.0-alpha2'
 
 
-DEFAULT_PAGINATION_CONFIG = {'MaxItems': 500}
+_DEFAULT_PAGINATION_CONFIG = {'MaxItems': 500}
 
 
 @dataclass
@@ -23,7 +23,7 @@ class APIClient:
     client: BaseClient = field(default=None)
     session: Session = field(default_factory=Session)
 
-    def api(self, func: str, **kwargs):
+    def api(self, func: str, **kwargs) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """
         Call a named API action by string. All arguments to the action should be passed
         as kwargs. The returned data has keys normalized to snake_case. Similarly, all
@@ -37,7 +37,7 @@ class APIClient:
         if paginate:
             paginator = self.client.get_paginator(func)
             if kwargs.get('PaginationConfig') is None:
-                kwargs.update(PaginationConfig=DEFAULT_PAGINATION_CONFIG)
+                kwargs.update(PaginationConfig=_DEFAULT_PAGINATION_CONFIG)
             page_iterator = paginator.paginate(**kwargs)
             responses = []
             for page in page_iterator:
