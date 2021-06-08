@@ -36,13 +36,6 @@ class ParChild:
 
 
 @dataclass
-class PolicyTypeSummary:
-    """The status of a policy type for an organization or root"""
-    status: str
-    type: str
-
-
-@dataclass
 class EffectivePolicy:
     """An effective policy applied to a node (root, OU, or account)"""
     last_updated_timestamp: str
@@ -62,13 +55,11 @@ class PolicySummary:
     type: str
 
 
-# @dataclass
-# class PolicyForTarget:
-#     """A policy attached to a target node"""
-#     last_updated_timestamp: str
-#     policy_content: str
-#     target_id: str
-#     policy_type: str
+@dataclass
+class PolicySummaryForTarget:
+    """A policy id and type for a policy attached to a target"""
+    id: str
+    type: str
 
 
 @dataclass
@@ -77,6 +68,13 @@ class PolicyTargetSummary:
     arn: str
     name: str
     target_id: str
+    type: str
+
+
+@dataclass
+class PolicyTypeSummary:
+    """The status of a policy type for an organization or root"""
+    status: str
     type: str
 
 
@@ -92,6 +90,19 @@ class Policy:
     tags: Optional[Dict[str, str]] = field(default=None)
     targets: Optional[List[PolicyTargetSummary]] = field(default=None)
 
+    def as_target(self):
+        return PolicySummaryForTarget(id=self.policy_summary.id,
+                                      type=self.policy_summary.type)
+
+
+# @dataclass
+# class PolicyForTarget:
+#     """A policy attached to a target node"""
+#     last_updated_timestamp: str
+#     policy_content: str
+#     target_id: str
+#     policy_type: str
+
 
 @dataclass
 class Root:
@@ -102,7 +113,7 @@ class Root:
 
     # Optional properties generally populated after initialization
     children: Optional[List[ParChild]] = field(default=None)
-    policies: Optional[List[str]] = field(default=None)
+    policies: Optional[List[PolicySummaryForTarget]] = field(default=None)
 
     def as_parchild_dict(self) -> Dict[str, str]:
         return {'id': self.id, 'type': 'ROOT'}
@@ -121,7 +132,7 @@ class OrganizationalUnit:
     # Optional properties generally populated after initialization
     children: Optional[List[ParChild]] = field(default=None)
     parent: Optional[ParChild] = field(default=None)
-    policies: Optional[List[str]] = field(default=None)
+    policies: Optional[List[PolicySummaryForTarget]] = field(default=None)
     tags: Optional[Dict[str, str]] = field(default=None)
 
     def as_parchild_dict(self) -> Dict[str, str]:
@@ -145,7 +156,7 @@ class Account:
     # Optional properties generally populated after initialization
     effective_policies: Optional[List[EffectivePolicy]] = field(default=None)
     parent: Optional[ParChild] = field(default=None)
-    policies: Optional[List[str]] = field(default=None)
+    policies: Optional[List[PolicySummaryForTarget]] = field(default=None)
     tags: Optional[Dict[str, str]] = field(default=None)
 
     def as_parchild_dict(self) -> Dict[str, str]:
@@ -173,9 +184,16 @@ class Organization:
     organizational_units: Optional[List[OrganizationalUnit]] = field(default=None)
     policies: Optional[List[Policy]] = field(default=None)
     root: Optional[Root] = field(default=None)
+
+    # Mappings that represent node -> edge relationships in the organization
     parent_child_tree: Optional[Dict[str, ParChild]] = field(default=None)
     child_parent_tree: Optional[Dict[str, ParChild]] = field(default=None)
-    
+    policy_target_tree: Optional[Dict[str, ParChild]] = field(default=None)
+
+    # Mappings that hold a reference to the index of each node in a list
+    account_index_map: Optional[Dict[str, int]] = field(default=None)
+    ou_index_map: Optional[Dict[str, int]] = field(default=None)
+    policy_index_map: Optional[Dict[str, int]] = field(default=None)
 
 #     def get_description(self) -> None:
 #         data = self.api('describe_organization').get('organization')

@@ -9,11 +9,14 @@ from .. import APIClient
 
 from ..models.organizations import (
     Account,
+    EffectivePolicy,
     Organization,
     OrganizationalUnit,
     ParChild,
     Policy,
     PolicySummary,
+    PolicySummaryForTarget,
+    PolicyTargetSummary,
     PolicyTypeSummary,
     Root,
 )
@@ -142,18 +145,101 @@ class OrganizationDataBuilder:
     def __e_policies(self) -> List[Dict[str, Any]]:
         policies = []
         for p in self.dm.available_policy_types:
-            policies.append(self.api('list_policies', filter=p.type))
+            policies.extend(self.api('list_policies', filter=p.type))
         return policies
 
     def __t_policies(self) -> List[Policy]:
-        return [Policy(policy_summary=pol) for pol in self.__e_policies()]
+        policies = []
+        for p in self.__e_policies():
+            policy = Policy(policy_summary=PolicySummary(**p))
+            policies.append(policy)
+        return policies
 
     def __l_policies(self) -> None:
         self.dm.policies = self.__t_policies()
+        if self.dm.policy_index_map is None:
+            self.dm.policy_index_map = {}
+        for i, policy in enumerate(self.dm.policies):
+            self.dm.policy_index_map[policy.policy_summary.id] = i
 
     def init_policies(self) -> None:
         """Initialize the list of Policy objects in the organization"""
         self.__l_policies()
+
+    def __e_policy_targets_for_id(self, policy_id: str) -> List[PolicyTargetSummary]:
+        return self.api('list_targets_for_policy', policy_id=policy_id)
+
+    def __e_policy_targets(self) -> Dict[str, List[PolicyTargetSummary]]:
+        ret = {}
+        breakpoint()
+        if self.dm.policies is None:
+            self.init_policies()
+        for policy in self.dm.policies:
+            pid = policy.policy_summary.id
+            data = self.__e_policy_targets_for_id(policy_id=pid)
+            for target in data:
+                if ret.get(pid) is None:
+                    ret[pid] = []
+                ret[pid].append(PolicyTargetSummary(**target))
+        return ret
+
+    def __lookup_obj_index(self, obj_type: str, obj_id: str) -> int:
+        map_field = None
+        if obj_type == 'account':
+            map_field = self.dm.account_index_map
+        elif obj_type == 'ou' or obj_type == 'organizational_unit':
+            map_field = self.dm.ou_index_map
+        elif obj_type == 'policy':
+            map_field = self.dm.policy_index_map
+        return map_field[obj_id]
+
+    def __lookup_account_index(self, account_id: str) -> int:
+        return self.__lookup_obj_index('account', account_id)
+
+    def __lookup_ou_index(self, ou_id: str) -> int:
+        return self.__lookup_obj_index('ou', ou_id)
+
+    def __lookup_policy_index(self, policy_id: str) -> int:
+        return self.__lookup_obj_index('policy', policy_id)
+
+    def __t_policy_targets(self) -> Dict[str, List[PolicySummaryForTarget]]:
+        ret = {}
+        for pid, p_targets in self.__e_policy_targets().items():
+            p_index = self.__lookup_policy_index(pid)
+            p_type = self.dm.policies[p_index].policy_summary.type
+            p_summary_for_target = PolicySummaryForTarget(id=pid, type=p_type)
+            ret[pid] = {
+                'policy_target_summaries': p_targets,
+                'policy_summary_for_targets': p_summary_for_target
+            }
+        return ret
+
+    def __l_policy_targets(self) -> None:
+        data = self.__t_policy_targets()
+        for pid, d in data.items():
+            p_index = self.__lookup_policy_index(pid)
+            # Update "targets" for Policy objects
+            self.dm.policies[p_index].targets = d['policy_target_summaries']
+            # Update "policies" for target objects
+            for target in d['policy_target_summaries']:
+                if target.type == 'ROOT':
+                    if self.dm.root.policies is None:
+                        self.dm.root.policies = []
+                    self.dm.root.policies.append(d['policy_summary_for_targets'])
+                elif target.type == 'ORGANIZATIONAL_UNIT':
+                    ou_index = self.__lookup_ou_index(target.target_id)
+                    if self.dm.organizational_units[ou_index].policies is None:
+                        self.dm.organizational_units[ou_index].policies = []
+                    self.dm.organizational_units[ou_index].policies.append(d['policy_summary_for_targets'])
+                elif target.type == 'ACCOUNT':
+                    acct_index = self.__lookup_account_index(target.target_id)
+                    if self.dm.accounts[acct_index].policies is None:
+                        self.dm.accounts[acct_index].policies = []
+                    self.dm.accounts[acct_index].policies.append(d['policy_summary_for_targets'])
+
+    def init_policy_targets(self) -> None:
+        """Initialize the list of Policy objects in the organization"""
+        self.__l_policy_targets()
 
     def __e_ous_recurse(self,
                         parents: List[ParChild] = None,
@@ -172,7 +258,6 @@ class OrganizationDataBuilder:
         if self.dm.organizational_units is None:
             self.dm.organizational_units = []
         if depth == maxdepth or len(parents) == 0:
-            breakpoint()
             return ous
         if ous is None:
             ous = []
@@ -208,9 +293,12 @@ class OrganizationDataBuilder:
 
     def __l_ous(self) -> None:
         ous = self.__t_ous()
-        breakpoint()
         self.dm.root.children = self.dm.parent_child_tree[self.dm.root.id]
         self.dm.organizational_units = ous
+        if self.dm.ou_index_map is None:
+            self.dm.ou_index_map = {}
+        for i, ou in enumerate(self.dm.organizational_units):
+            self.dm.ou_index_map[ou.id] = i
 
     def init_ous(self) -> None:
         """Recurse all OUs in the organization"""
@@ -225,14 +313,40 @@ class OrganizationDataBuilder:
     def __l_accounts(self) -> None:
         data = self.__t_accounts()
         accounts = []
-        breakpoint()
         for result in data:
-            breakpoint()
             account = result
             account.parent = self.dm.child_parent_tree[account.id]
             accounts.append(account)
         self.dm.accounts = accounts
+        if self.dm.account_index_map is None:
+            self.dm.account_index_map = {}
+        for i, account in enumerate(self.dm.accounts):
+            self.dm.account_index_map[account.id] = i
 
     def init_accounts(self) -> None:
         """Initialize the list of Account objects in the organizations"""
         self.__l_accounts()
+
+    def __e_effective_policies_for_target(self, target_id: str) -> List[EffectivePolicy]:
+        effective_policies = []
+        pol_types = [p.type for p in self.dm.available_policy_types if p.type != 'SERVICE_CONTROL_POLICY']
+        for pol_type in pol_types:
+            data = self.api('describe_effective_policy', policy_type=pol_type, target_id=target_id)
+            effective_policies.append(EffectivePolicy(**data))
+        return effective_policies
+
+    def __e_effective_policies(self) -> Dict[int, List[EffectivePolicy]]:
+        ret = {}
+        if self.dm.accounts is None:
+            self.init_accounts()
+        for account in self.dm.accounts:
+            ret[account.id] = self.__e_effective_policies_for_target(account.id)
+        return ret
+
+    def __l_effective_policies(self) -> None:
+        for acct_id, effective_policies in self.__e_effective_policies().items():
+            acct_index = self.__lookup_account_index(acct_id)
+            self.dm.accounts[acct_index].effective_policies = effective_policies
+
+    def init_effective_policies(self) -> None:
+        self.__l_effective_policies()
