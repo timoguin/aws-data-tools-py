@@ -6,6 +6,7 @@ from botocore.session import Session
 from botocore.client import BaseClient
 
 from .. import APIClient
+from ..utils import tag_list_to_dict, query_tags
 
 from ..models.organizations import (
     Account,
@@ -350,3 +351,62 @@ class OrganizationDataBuilder:
 
     def init_effective_policies(self) -> None:
         self.__l_effective_policies()
+
+    def __e_tags_for_resource_ids(self,
+                                  resource_ids: List[str]
+                                  ) -> Dict[str, Dict[str, str]]:
+        ret = {}
+        for resource_id in resource_ids:
+            ret[resource_id] = query_tags(self.client, resource_id)
+        return ret
+
+    def __et_tags(self, obj_type: str) -> Dict[str, Dict[str, str]]:
+        obj_type = obj_type.upper()
+        resource_ids = None
+        if obj_type == 'ROOT' or obj_type == 'ROOTS':
+            if self.dm.root is None:
+                self.init_root()
+            resource_ids = [self.dm.root.id]
+        elif (
+                 obj_type == 'ORGANIZATIONAL_UNIT' or
+                 obj_type == 'ORGANIZATIONAL_UNITS' or
+                 obj_type == 'OU' or
+                 obj_type == 'OUS'
+            ):
+            if self.dm.organizational_units is None:
+                self.init_ous()
+            resource_ids = [ou.id for ou in self.dm.organizational_units]
+        elif obj_type == 'ACCOUNT' or obj_type == 'ACCOUNTS':
+            if self.dm.accounts is None:
+                self.init_accounts()
+            resource_ids = [acct.id for acct in self.dm.accounts]
+        return self.__e_tags_for_resource_ids(resource_ids=resource_ids)
+
+    def __l_account_tags(self) -> None:
+        for acct_id, tags in self.__et_tags('accounts').items():
+            acct_index = self.__lookup_account_index(acct_id)
+            self.dm.accounts[acct_index].tags = tags
+
+    def init_account_tags(self) -> None:
+        self.__l_account_tags()
+
+    def __l_ou_tags(self) -> None:
+        for ou_id, tags in self.__et_tags('ous').items():
+            ou_index = self.__lookup_ou_index(ou_id)
+            self.dm.organizational_units[ou_index].tags = tags
+
+    def init_ou_tags(self) -> None:
+        self.__l_ou_tags()
+
+    def __l_root_tags(self) -> None:
+        if self.dm.root is None:
+            self.init_root()
+        self.dm.root.tags = self.__et_tags('root')[self.dm.root.id]
+
+    def init_root_tags(self) -> None:
+        self.__l_root_tags()
+
+    def init_all_tags(self) -> None:
+        self.init_root_tags()
+        self.init_ou_tags()
+        self.init_account_tags()
