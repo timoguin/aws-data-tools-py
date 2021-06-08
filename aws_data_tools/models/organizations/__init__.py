@@ -3,36 +3,36 @@ from typing import Any, Dict, List, Optional, Union
 
 
 @dataclass
-class Child:
-    """A child object for a node"""
+class ParChild:
+    """A parent or child representation for a node"""
     id: str
     type: str
 
 
-@dataclass
-class Children:
-    """The child accounts and OUs for a node"""
-    accounts: Optional[List[str]] = field(default=None)
-    organizational_units: Optional[List[str]] = field(default=None)
-
-    def add_child(self, child: Child) -> None:
-        if child.type == ChildType.ACCOUNT:
-            self.accounts.append(child.id)
-        elif child.type == ChildType.ORGANIZATIONAL_UNIT:
-            self.organizational_units.append(child.id)
-        return
-
-    def add_children(self, children: List[Child]) -> None:
-        for child in children:
-            self.add_child(child)
-        return
-
-
-@dataclass
-class Parent:
-    """The parent object for a node"""
-    id: str
-    type: str
+# @dataclass
+# class Children:
+#     """The child accounts and OUs for a node"""
+#     accounts: Optional[List[str]] = field(default=None)
+#     organizational_units: Optional[List[str]] = field(default=None)
+# 
+#     def add_child(self, child: Child) -> None:
+#         if child.type == ChildType.ACCOUNT:
+#             self.accounts.append(child.id)
+#         elif child.type == ChildType.ORGANIZATIONAL_UNIT:
+#             self.organizational_units.append(child.id)
+#         return
+# 
+#     def add_children(self, children: List[Child]) -> None:
+#         for child in children:
+#             self.add_child(child)
+#         return
+# 
+# 
+# @dataclass
+# class Parent:
+#     """The parent object for a node"""
+#     id: str
+#     type: str
 
 
 @dataclass
@@ -82,8 +82,11 @@ class PolicyTargetSummary:
 
 @dataclass
 class Policy:
-    content: str
     policy_summary: PolicySummary
+
+    # We allow content to be None because ListPolicies doesn't return the content data.
+    # Instead you have to DescribePolicie to get the content.
+    content: str = field(default=None)
 
     # Optional properties generally populated after initialization
     tags: Optional[Dict[str, str]] = field(default=None)
@@ -98,8 +101,14 @@ class Root:
     policy_types: List[PolicyTypeSummary]
 
     # Optional properties generally populated after initialization
-    children: Optional[List[Child]] = field(default=None)
+    children: Optional[List[ParChild]] = field(default=None)
     policies: Optional[List[str]] = field(default=None)
+
+    def as_parchild_dict(self) -> Dict[str, str]:
+        return {'id': self.id, 'type': 'ROOT'}
+
+    def as_parchild(self) -> ParChild:
+        return ParChild(**self.as_parchild_dict())
 
 
 @dataclass
@@ -110,10 +119,16 @@ class OrganizationalUnit:
     name: str
 
     # Optional properties generally populated after initialization
-    children: Optional[List[Child]] = field(default=None)
-    parent: Optional[Parent] = field(default=None)
+    children: Optional[List[ParChild]] = field(default=None)
+    parent: Optional[ParChild] = field(default=None)
     policies: Optional[List[str]] = field(default=None)
     tags: Optional[Dict[str, str]] = field(default=None)
+
+    def as_parchild_dict(self) -> Dict[str, str]:
+        return {'id': self.id, 'type': 'ORGANIZATIONAL_UNIT'}
+
+    def as_parchild(self) -> ParChild:
+        return ParChild(**self.as_parchild_dict())
 
 
 @dataclass
@@ -129,9 +144,15 @@ class Account:
 
     # Optional properties generally populated after initialization
     effective_policies: Optional[List[EffectivePolicy]] = field(default=None)
-    parent: Optional[Parent] = field(default=None)
+    parent: Optional[ParChild] = field(default=None)
     policies: Optional[List[str]] = field(default=None)
     tags: Optional[Dict[str, str]] = field(default=None)
+
+    def as_parchild_dict(self) -> Dict[str, str]:
+        return {'id': self.id, 'type': 'ACCOUNT'}
+
+    def as_parchild(self) -> ParChild:
+        return ParChild(**self.as_parchild_dict())
 
 
 @dataclass
@@ -152,6 +173,9 @@ class Organization:
     organizational_units: Optional[List[OrganizationalUnit]] = field(default=None)
     policies: Optional[List[Policy]] = field(default=None)
     root: Optional[Root] = field(default=None)
+    parent_child_tree: Optional[Dict[str, ParChild]] = field(default=None)
+    child_parent_tree: Optional[Dict[str, ParChild]] = field(default=None)
+    
 
 #     def get_description(self) -> None:
 #         data = self.api('describe_organization').get('organization')

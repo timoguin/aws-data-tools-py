@@ -8,15 +8,19 @@ from botocore.client import BaseClient
 from .. import APIClient
 
 from ..models.organizations import (
+    Account,
     Organization,
-    Root,
+    OrganizationalUnit,
+    ParChild,
+    Policy,
     PolicySummary,
     PolicyTypeSummary,
+    Root,
 )
 
 
-SERVICE_NAME = 'organizations'
-ORGANIZATIONAL_UNIT_MAXDEPTH = 5
+_SERVICE_NAME = 'organizations'
+_OU_MAXDEPTH = 5
 
 
 # def query_effective_policies(client: APIClient,
@@ -90,7 +94,7 @@ class OrganizationDataBuilder:
 
     def Connect(self):
         """Initialize an authenticated session"""
-        self.client = APIClient(SERVICE_NAME)
+        self.client = APIClient(_SERVICE_NAME)
 
     def api(self, func: str, **kwargs) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         """Make arbitrary API calls with the session client"""
@@ -134,3 +138,101 @@ class OrganizationDataBuilder:
     def init_root(self) -> None:
         """Initialize the organization's root object"""
         self.__l_roots()
+
+    def __e_policies(self) -> List[Dict[str, Any]]:
+        policies = []
+        for p in self.dm.available_policy_types:
+            policies.append(self.api('list_policies', filter=p.type))
+        return policies
+
+    def __t_policies(self) -> List[Policy]:
+        return [Policy(policy_summary=pol) for pol in self.__e_policies()]
+
+    def __l_policies(self) -> None:
+        self.dm.policies = self.__t_policies()
+
+    def init_policies(self) -> None:
+        """Initialize the list of Policy objects in the organization"""
+        self.__l_policies()
+
+    def __e_ous_recurse(self,
+                        parents: List[ParChild] = None,
+                        ous: List[OrganizationalUnit] = None,
+                        depth: int = 0,
+                        maxdepth: int = _OU_MAXDEPTH) -> List[OrganizationalUnit]:
+        """Recurse the org tree and return a list of OU dicts"""
+        if parents is None:
+            if self.dm.root is None:
+                self.init_root()
+            parents = [self.dm.root.as_parchild()]
+        if self.dm.parent_child_tree is None:
+            self.dm.parent_child_tree = {}
+        if self.dm.child_parent_tree is None:
+            self.dm.child_parent_tree = {}
+        if self.dm.organizational_units is None:
+            self.dm.organizational_units = []
+        if depth == maxdepth or len(parents) == 0:
+            breakpoint()
+            return ous
+        if ous is None:
+            ous = []
+        next_parents = []
+        for parent in parents:
+            if self.dm.parent_child_tree.get(parent.id) is None:
+                self.dm.parent_child_tree[parent.id] = []
+            ou_results = self.api('list_organizational_units_for_parent', parent_id=parent.id)
+            for ou_result in ou_results:
+                ou = OrganizationalUnit(parent=parent, **ou_result)
+                ou_as_parchild = ou.as_parchild()
+                self.dm.parent_child_tree[parent.id].append(ou_as_parchild)
+                self.dm.child_parent_tree[ou.id] = parent
+                ous.append(ou)
+                next_parents.append(ou_as_parchild)
+            acct_results = self.api('list_accounts_for_parent', parent_id=parent.id)
+            for acct_result in acct_results:
+                account = Account(parent=parent, **acct_result)
+                self.dm.parent_child_tree[parent.id].append(account.as_parchild())
+                self.dm.child_parent_tree[account.id] = parent
+        return self.__e_ous_recurse(parents=next_parents, ous=ous, depth=depth+1)
+
+    def __e_ous(self) -> List[OrganizationalUnit]:
+        return self.__e_ous_recurse()
+
+    def __t_ous(self) -> List[OrganizationalUnit]:
+        data = self.__e_ous()
+        ous = []
+        for ou in data:
+            ou.children = self.dm.parent_child_tree[ou.id]
+            ous.append(ou)
+        return ous
+
+    def __l_ous(self) -> None:
+        ous = self.__t_ous()
+        breakpoint()
+        self.dm.root.children = self.dm.parent_child_tree[self.dm.root.id]
+        self.dm.organizational_units = ous
+
+    def init_ous(self) -> None:
+        """Recurse all OUs in the organization"""
+        self.__l_ous()
+
+    def __e_accounts(self) -> List[Dict[str, Any]]:
+        return self.api('list_accounts')
+
+    def __t_accounts(self) -> List[Account]:
+        return [Account(**account) for account in self.__e_accounts()]
+
+    def __l_accounts(self) -> None:
+        data = self.__t_accounts()
+        accounts = []
+        breakpoint()
+        for result in data:
+            breakpoint()
+            account = result
+            account.parent = self.dm.child_parent_tree[account.id]
+            accounts.append(account)
+        self.dm.accounts = accounts
+
+    def init_accounts(self) -> None:
+        """Initialize the list of Account objects in the organizations"""
+        self.__l_accounts()

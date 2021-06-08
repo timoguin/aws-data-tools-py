@@ -1,7 +1,15 @@
-DEPS :=awk docker docker-compose grep poetry realpath sed
-AWS_OKTA_PROFILE :=
-PY_INSTALL_ARGS :=--extras="cli devtools docs"
-VENV_DIR :=.venv
+DEPS ?=awk docker docker-compose grep poetry realpath sed
+AWS_OKTA_PROFILE ?=
+PY_INSTALL_ARGS ?=--extras="cli devtools docs"
+VENV_DIR ?=.venv
+CMD ?=/bin/bash
+DEBUG ?=false
+
+ifeq (${DEBUG},true)
+	export PYTHONBREAKPOINT=ipdb.set_trace
+else
+	export PYTHONBREAKPOINT=0
+endif
 
 ifneq (${AWS_OKTA_PROFILE},)
 	SHELL_CMD_PREFIX =aws-okta exec ${AWS_OKTA_PROFILE} --
@@ -13,6 +21,10 @@ default: help
 .PHONY: shell ## Activate the Python virtual environment in a subshell
 shell: ${VENV_DIR}
 	@${SHELL_CMD_PREFIX} poetry shell --quiet --no-interaction
+
+.PHONY: shellcmd ## Run a command (CMD arg)in the activated Python venv
+shellcmd: ${VENV_DIR}
+	@${SHELL_CMD_PREFIX} /bin/bash -c "poetry run ${CMD}"
 
 .PHONY: test-integration ## Run the integration test suite
 test-integration: run-test-server
