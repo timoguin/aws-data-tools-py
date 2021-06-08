@@ -376,6 +376,14 @@ class OrganizationDataBuilder:
             if self.dm.organizational_units is None:
                 self.init_ous()
             resource_ids = [ou.id for ou in self.dm.organizational_units]
+        elif obj_type == 'POLICY' or obj_type == 'POLICIES':
+            if self.dm.policies is None:
+                self.init_policies()
+            resource_ids = [
+                pol.policy_summary.id
+                for pol in self.dm.policies
+                if not pol.policy_summary.aws_managed
+            ]
         elif obj_type == 'ACCOUNT' or obj_type == 'ACCOUNTS':
             if self.dm.accounts is None:
                 self.init_accounts()
@@ -406,7 +414,18 @@ class OrganizationDataBuilder:
     def init_root_tags(self) -> None:
         self.__l_root_tags()
 
+    def __l_policy_tags(self) -> None:
+        if self.dm.policies is None:
+            self.init_policies()
+        for policy_id, tags in self.__et_tags('policies').items():
+            policy_index = self.__lookup_policy_index(policy_id)
+            self.dm.policies[policy_index].tags = tags
+
+    def init_policy_tags(self) -> None:
+        self.__l_policy_tags()
+
     def init_all_tags(self) -> None:
         self.init_root_tags()
+        self.init_policy_tags()
         self.init_ou_tags()
         self.init_account_tags()
