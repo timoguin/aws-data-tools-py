@@ -5,8 +5,7 @@ from traceback import format_exc
 
 from botocore.exceptions import ClientError, NoCredentialsError
 
-from ..models.organizations import Organization
-from ..utils import dataclass_to_json
+from ..builders.organizations import OrganizationDataBuilder as odb
 
 
 structlog.configure(
@@ -55,8 +54,8 @@ def dump_json(ctx, include_accounts):
     errmsg = None
     tb = None
     try:
-        org = Organization()
-        click.echo(dataclass_to_json(org))
+        org = odb(init_all=True)
+        click.echo(org.as_json())
     except ClientError as exc_info:
         errmsg = f'Service Error: {str(exc_info)}'
     except NoCredentialsError as exc_info:

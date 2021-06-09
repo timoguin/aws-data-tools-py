@@ -1,5 +1,6 @@
-from dataclasses import asdict
+from dataclasses import asdict, fields
 from json import dumps as json_dumps
+from json import JSONEncoder
 from typing import Dict, List
 
 from . import APIClient
