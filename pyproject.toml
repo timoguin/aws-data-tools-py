@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aws_data_tools"
-version = "0.1.0-alpha4"
+version = "0.1.0-beta1"
 description = "A set of Python libraries for querying and transforming data from AWS APIs"
 authors = ["Tim O'Guin <timoguin@gmail.com>"]
 license = "MIT"

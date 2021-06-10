@@ -1,11 +1,9 @@
-# AWS Data Tools
-
 An set of opinioned (but flexible) Python libraries for querying and transforming data
 from various AWS APIs, as well as a CLI interface.
 
 This is in early development.
 
-## Installation
+# Installation
 
 Using pip should work on any system with at least Python 3.9:
 
@@ -19,16 +17,16 @@ By default, the CLI is not installed. To include it, you can specify it as an ex
 $ pip install aws-data-tools[cli]
 ```
 
-## Usage
+# Usage
 
 There are currently 4 main components of the package: helpers for working with AWS
 session and APIs, data models for API data types, builders to query AWS APIs and
 perform deserialization and ETL operations of raw data, and a CLI tool to further
 abstract some of these operations.
 
-### API Client
+## API Client
 
-The [APIClient](aws_data_models/__init__.py) class wraps the initialization of a boto3
+The [APIClient](aws_data_models/client.py) class wraps the initialization of a boto3
 session and a low-level client for a named service. It contains a single `api()`
 function that takes the name of an API operation and any necessary request data as
 kwargs.
@@ -40,7 +38,7 @@ passed for any desired customizations.
 When initializing the class, it will create a session and a client.
 
 ```python
-from aws_data_tools import APIClient
+from aws_data_tools.client import APIClient
 
 client = APIClient("organizations")
 org = client.api("describe_organization").get("organization")
@@ -62,14 +60,12 @@ format that the APIs utilize. Any returned data has any keys converted to `snake
 The raw boto3 session is available as the `session` field, and the raw, low-level
 client is available as the `client` field.
 
-### Data Models
+## Data Models
 
 The [models](aws_data_tools/models) package contains a collection of opinionated models
 implemented as data classes. There is a package for each available service. Each one is
 named after the service that would be passed when creating a boto3 client using
 `boto3.client('service_name')`.
-
-#### Organizations
 
 Most data types used with the Organizations APIs are supported. The top-level
 `Organization` class is the most useful, as it also acts as a container for all other
@@ -87,7 +83,7 @@ The following data types and operations are currently not supported:
 All other data types are supported.
 
 ```python
-from aws_data_tools import APIClient
+from aws_data_tools.client import APIClient
 from aws_data_tools.models.organizations import Organization
 
 client = APIClient("organizations")
@@ -99,14 +95,12 @@ org.as_json()
 View the [package](aws_data_tools/models/organization/__init__.py) for the full list of
 models.
 
-### Builders
+## Builders
 
 While it is possible to directly utilize and interact with the data models, probably
 the largest benefit is the [builders](aws_data_tools/builders) package. It abstracts
 any API operations and data transformations required to build data models. The models
 can then be serialized to dicts, as well as JSON or YAML strings.
-
-### Organizations
 
 A full model of an AWS Organization can be constructed using the
 `OrganizationDataBuilder` class. It handles recursing the organizational tree and
@@ -150,7 +144,7 @@ org.init_policy_targets()
 org.init_effective_policies()
 ```
 
-### CLI
+## CLI
 
 As noted above, the CLI is an optional component that can be installed using pip's
 bracket notation for extras:
@@ -176,8 +170,6 @@ Options:
 Commands:
   organization  Interact with data from AWS Organizations APIs
 ```
-
-#### Organizations
 
 Here is how to dump a JSON representation of an AWS Organization to stdout:
 
