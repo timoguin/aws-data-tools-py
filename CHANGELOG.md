@@ -12,13 +12,16 @@ Notes for any unreleased changes do here. When a new release is cut, move these 
 the unreleased section to the section for the new release.
 -->
 
-Upcoming changes.
+No unreleased changes.
 
-### Added
+## [0.1.0-beta1] - 2020-06-09
 
 ### Changed
 
-### Removed
+- Moves APIClient class to `aws_data_tools.client.APIClient`
+- Cleans up README
+- Bumps version to 0.1.0-beta1
+- Adds a CI config for Semantic Pull Requests
 
 ## [0.1.0-alpha4] - 2020-06-09
 
@@ -41,5 +44,6 @@ Initial alpha release
 These Markdown anchors provide a link to the diff for each release. They should be
 updated any time a new release is cut.
 -->
-[Unreleased]: https://github.com/timoguin/aws-org-tools-py/compare/v0.1.0-alpha4...HEAD
+[Unreleased]: https://github.com/timoguin/aws-org-tools-py/compare/v0.1.0-beta-1...HEAD
+[0.1.0-beta1]: https://github.com/timoguin/aws-org-tools-py/compare/v0.1.0-alpha4...v0.1.0-beta1
 [0.1.0-alpha4]: https://github.com/timoguin/aws-org-tools-py/releases/tag/v0.1.0-alpha4

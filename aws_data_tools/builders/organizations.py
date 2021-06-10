@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Union
 from botocore.session import Session
 from botocore.client import BaseClient
 
-from .. import APIClient
+from ..client import APIClient
 from ..models import ModelBase
 from ..utils import tag_list_to_dict, query_tags
 

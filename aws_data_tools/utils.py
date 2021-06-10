@@ -3,7 +3,7 @@ from json import dumps as json_dumps
 from json import JSONEncoder
 from typing import Dict, List
 
-from . import APIClient
+from .client import APIClient
 
 
 def tag_list_to_dict(tags: List[Dict[str, str]]) -> Dict[str, str]:
