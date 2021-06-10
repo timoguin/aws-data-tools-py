@@ -7,7 +7,7 @@ from botocore.paginate import PageIterator, Paginator
 from humps import depascalize, pascalize
 
 
-__VERSION__ = "0.1.0-alpha3"
+__VERSION__ = "0.1.0-alpha4"
 
 
 _DEFAULT_PAGINATION_CONFIG = {"MaxItems": 500}

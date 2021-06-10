@@ -20,7 +20,7 @@ Upcoming changes.
 
 ### Removed
 
-## [0.0.1-alpha3] - 2020-06-09
+## [0.1.0-alpha4] - 2020-06-09
 
 Initial alpha release
 
@@ -41,5 +41,5 @@ Initial alpha release
 These Markdown anchors provide a link to the diff for each release. They should be
 updated any time a new release is cut.
 -->
-[Unreleased]: https://github.com/timoguin/aws-org-tools-py/compare/v0.0.1-alpha3...HEAD
-[0.0.1-alpha3]: https://github.com/timoguin/aws-org-tools-py/releases/tag/v0.0.1-alpha3
+[Unreleased]: https://github.com/timoguin/aws-org-tools-py/compare/v0.1.0-alpha4...HEAD
+[0.1.0-alpha4]: https://github.com/timoguin/aws-org-tools-py/releases/tag/v0.1.0-alpha4
