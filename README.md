@@ -39,52 +39,198 @@ References:
 - CloudWatch Logs: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/aws-services-sending-logs.html
 - CloudWatch Events: https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/EventTypes.html
 
-## Installing
-
----
-
-**NOTE**: None of the following installation methods actually work. This is stubbed out
-to include possible future installation methods.
-
----
+## Installation
 
 Using pip should work on any system with at least Python 3.9:
 
-`$ pip install aws-data-tools`
-
-### MacOS
-
-With homebrew:
-
-`$ brew install aws-data-tools-py`
-
-Using the pkg installer:
-
-(This isn't how we'll want to do this. We want to bundle the application with _all_ its
-dependencies, including Python itself. This probably means using pyInstaller to bundle
-an "app" image.)
-
-```
-$ LATEST=$(gh release list --repo timoguin/aws-data-tools-py | grep 'Latest' | cut -f1)
-$ curl -sL https://github.com/segmentio/aws-okta/releases/download/aws-data-tools-py.pkg --output aws-data-tools-py_$LATEST.pkg
-$ installer -pkg aws-data-tools.py_$LATEST.pkg -target /usr/local/bin
+```shell
+$ pip install aws-data-tools
 ```
 
-### Windows
+By default, the CLI is not installed. To include it, you can specify it as an extra:
 
-With chocolatey:
-
-`$ choco install aws-data-tools-py`
+```shell
+$ pip install aws-data-tools[cli]
+```
 
 ## Usage
 
-Empty.
+There are currently 4 main components of the package: helpers for working with AWS
+session and APIs, data models for API data types, builders to query AWS APIs and
+perform deserialization and ETL operations of raw data, and a CLI tool to further
+abstract some of these operations.
 
-## Testing
+### API Client
 
-### Organizations Data ETL
+The [APIClient](aws_data_models/__init__.py) class wraps the initialization of a boto3
+session and a low-level client for a named service. It contains a single `api()`
+function that takes the name of an API operation and any necessary request data as
+kwargs.
 
-- Bring up localstack instance (Pro) running IAM and Organizations (master account)
-- Seed instance with Organization data (OUs, accounts, policies)
-- Run script that performs ETL against data from the AWS Organizations APIs
-- Ensure generated data is the same as the seed data
+It supports automatic pagination of any API operations that support it. The pagination
+config is set to `{'MaxItems': 500}` by default, but a `pagination_config` dict can be
+passed for any desired customizations.
+
+When initializing the class, it will create a session and a client.
+
+```python
+from aws_data_tools import APIClient
+
+client = APIClient("organizations")
+org = client.api("describe_organization").get("organization")
+roots = client.api("list_roots")
+ous = client.api("list_organizational_units_for_parent", parent_id="r-abcd").get(
+    "organizational_units"
+)
+```
+
+Note that, generally, any list operations will return a list with no further filtering
+required, while describe calls will have the data keyed under the name of the object
+being described. For example, describing an organization returns the relavant data
+under an `organization` key.
+
+Furthermore, you may notice above that API operations and their corresponding arguments
+support `snake_case` format. Arguments can also be passed in the standard `PascalCase`
+format that the APIs utilize. Any returned data has any keys converted to `snake_case`.
+
+The raw boto3 session is available as the `session` field, and the raw, low-level
+client is available as the `client` field.
+
+### Data Models
+
+The [models](aws_data_tools/models) package contains a collection of opinionated models
+implemented as data classes. There is a package for each available service. Each one is
+named after the service that would be passed when creating a boto3 client using
+`boto3.client('service_name')`.
+
+#### Organizations
+
+Most data types used with the Organizations APIs are supported. The top-level
+`Organization` class is the most useful, as it also acts as a container for all other
+related data in the organization.
+
+The following data types and operations are currently not supported:
+
+- Viewing organization handshakes (for creating and accepting account invitations)
+- Viewing the status of accounts creations
+- Viewing organization integrations with AWS services (for org-wide implementations of
+  things like CloudTrail, Config, etc.)
+- Viewing delegated accounts and services
+- Any operations that are not read-only
+
+All other data types are supported.
+
+```python
+from aws_data_tools import APIClient
+from aws_data_tools.models.organizations import Organization
+
+client = APIClient("organizations")
+data = client.api("describe_organization").get("organization")
+org = Organization(**data)
+org.as_json()
+```
+
+View the [package](aws_data_tools/models/organization/__init__.py) for the full list of
+models.
+
+### Builders
+
+While it is possible to directly utilize and interact with the data models, probably
+the largest benefit is the [builders](aws_data_tools/builders) package. It abstracts
+any API operations and data transformations required to build data models. The models
+can then be serialized to dicts, as well as JSON or YAML strings.
+
+### Organizations
+
+A full model of an AWS Organization can be constructed using the
+`OrganizationDataBuilder` class. It handles recursing the organizational tree and
+populating any relational data between the various nodes, e.g., parent-child
+relationships between an OU and an account.
+
+The simplest example pulls all supported organizational data and creates the related
+data models:
+
+```python
+from aws_data_tools.builders.organizations import OrganizationDataBuilder as odb
+
+org = odb(init_all=True)
+```
+
+Note that this makes many API calls to get this data. For example, every OU, policy,
+and account requires an API call to pull any associated tags, so every node requires at
+least `n+3` API calls. Parallel operations are not supported, so everything runs
+serially.
+
+To get a sense of the number of API calls required to populate organization data, an
+organization with 50 OUs, 5 policies, 200 accounts, and with all policy types activated
+requires 316 API calls! That's why this library was created.
+
+For more control over the process, you can init each set of components as desired:
+
+```python
+from aws_data_tools.builders.organizations import OrganizationDataBuilder as odb
+
+org = odb()
+org.init_connection()
+org.init_organization()
+org.init_root()
+org.init_policies()
+org.init_policy_tags()
+org.init_ous()
+org.init_ou_tags()
+org.init_accounts()
+org.init_account_tags()
+org.init_policy_targets()
+org.init_effective_policies()
+```
+
+### CLI
+
+As noted above, the CLI is an optional component that can be installed using pip's
+bracket notation for extras:
+
+```shell
+$ pip install aws-data-tools[cli]
+```
+
+With no arguments or flags, help content is displayed by default. You can also pass the
+`--help` flag for the help content of any commands or subcommands.
+
+```shell
+$ awsdata
+Usage: awsdata [OPTIONS] COMMAND [ARGS]...
+
+  A command-line tool to interact with data from AWS APIs
+
+Options:
+  --version    Show the version and exit.
+  -d, --debug  Enable debug mode
+  -h, --help   Show this message and exit.
+
+Commands:
+  organization  Interact with data from AWS Organizations APIs
+```
+
+#### Organizations
+
+Here is how to dump a JSON representation of an AWS Organization to stdout:
+
+The `organization` subcommand allows dumping organization data to a file or to stdout:
+
+```shell
+$ awsdata organization dump-json --format json
+Usage: awsdata organization dump-json [OPTIONS]
+
+  Dump a JSON representation of the organization
+
+Options:
+  --no-accounts             Exclude account data from the model
+  --no-policies             Exclude policy data from the model
+  -f, --format [JSON|YAML]  The output format for the data
+  -o, --out-file TEXT       File path to write data instead of stdout
+  -h, --help                Show this message and exit.
+```
+
+## Contributing
+
+View the [Contributing Guide](.github/CONTRIBUTING.md) to learn about giving back.
