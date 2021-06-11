@@ -26,6 +26,22 @@ shell: ${VENV_DIR}
 shellcmd: ${VENV_DIR}
 	@${SHELL_CMD_PREFIX} /bin/bash -c "poetry run ${CMD}"
 
+.PHONY: lint
+lint:
+	@if [ -z $$VIRTUAL_ENV ]; then       \
+	     poetry run tox --quiet -e lint; \
+	 else                                \
+	     tox --quiet -e lint;            \
+	 fi
+
+.PHONY: lint-docs
+lint-docs:
+	@if [ -z $$VIRTUAL_ENV ]; then            \
+	     poetry run tox --quiet -e lint-docs; \
+	 else                                     \
+	     tox --quiet -e lint-docs;            \
+	 fi
+
 .PHONY: test-integration ## Run the integration test suite
 test-integration: run-test-server
 	@printf "${OK}%s...\n${CCEND}" "Starting motoserver"

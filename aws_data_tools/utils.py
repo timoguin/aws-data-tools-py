@@ -7,6 +7,7 @@ from .client import APIClient
 
 
 def tag_list_to_dict(tags: List[Dict[str, str]]) -> Dict[str, str]:
+    """Convert a list of tag objects to a dict"""
     return {tag["key"]: tag["value"] for tag in tags}
 
 

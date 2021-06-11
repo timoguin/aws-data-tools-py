@@ -1,12 +1,16 @@
+"""
+Builder utilies for working with data from AWS Organizations APIs
+"""
+
 from dataclasses import dataclass, field, InitVar
 from typing import Any, Dict, List, Union
 
-from botocore.session import Session
 from botocore.client import BaseClient
+from botocore.session import Session
 
 from ..client import APIClient
 from ..models import ModelBase
-from ..utils import tag_list_to_dict, query_tags
+from ..utils import query_tags
 
 from ..models.organizations import (
     Account,
@@ -52,7 +56,7 @@ class OrganizationDataBuilder(ModelBase):
 
     # Used by __post_init__() to determine what data to initialize (default is none)
     init_all: InitVar[bool] = field(default=False)
-    init_connection: InitVar[bool] = field(default=None)
+    init_connection: InitVar[bool] = field(default=True)
     init_organization: InitVar[bool] = field(default=False)
     init_root: InitVar[bool] = field(default=False)
     init_policies: InitVar[bool] = field(default=False)
@@ -93,7 +97,7 @@ class OrganizationDataBuilder(ModelBase):
         """Init the Organization instance on the dm field"""
         self.dm = Organization(**self.__t_organization())
 
-    def init_organization(self) -> None:
+    def fetch_organization(self) -> None:
         """Initialize the organization object with minimal data"""
         self.__l_organization()
 
@@ -109,10 +113,10 @@ class OrganizationDataBuilder(ModelBase):
         """Init the Root instance of the dm.root field"""
         self.dm.root = self.__t_roots()
 
-    def init_root(self) -> None:
+    def fetch_root(self) -> None:
         """Initialize the organization's root object"""
         if self.dm.id is None:
-            self.init_organization()
+            self.fetch_organization()
         self.__l_roots()
 
     def __e_policies(self) -> List[Dict[str, Any]]:
@@ -120,7 +124,6 @@ class OrganizationDataBuilder(ModelBase):
         ret = []
         for p in self.dm.available_policy_types:
             policies = []
-            breakpoint()
             p_summaries = self.api("list_policies", filter=p.type)
             for p_summary in p_summaries:
                 p_detail = self.api("describe_policy", policy_id=p_summary["id"]).get(
@@ -147,7 +150,7 @@ class OrganizationDataBuilder(ModelBase):
         for i, policy in enumerate(self.dm.policies):
             self.dm._policy_index_map[policy.policy_summary.id] = i
 
-    def init_policies(self) -> None:
+    def fetch_policies(self) -> None:
         """Initialize the list of Policy objects in the organization"""
         self.__l_policies()
 
@@ -159,7 +162,7 @@ class OrganizationDataBuilder(ModelBase):
         """Extract target summary data for all policies"""
         ret = {}
         if self.dm.policies is None:
-            self.init_policies()
+            self.fetch_policies()
         for policy in self.dm.policies:
             pid = policy.policy_summary.id
             data = self.__e_policy_targets_for_id(policy_id=pid)
@@ -242,7 +245,7 @@ class OrganizationDataBuilder(ModelBase):
                         d["policy_summary_for_targets"]
                     )
 
-    def init_policy_targets(self) -> None:
+    def fetch_policy_targets(self) -> None:
         """Initialize the list of Policy objects in the organization"""
         self.__l_policy_targets()
 
@@ -256,7 +259,7 @@ class OrganizationDataBuilder(ModelBase):
         """Recurse the org tree and return a list of OU dicts"""
         if parents is None:
             if self.dm.root is None:
-                self.init_root()
+                self.fetch_root()
             parents = [self.dm.root.as_parchild()]
         if self.dm._parent_child_tree is None:
             self.dm._parent_child_tree = {}
@@ -312,7 +315,7 @@ class OrganizationDataBuilder(ModelBase):
         for i, ou in enumerate(self.dm.organizational_units):
             self.dm._ou_index_map[ou.id] = i
 
-    def init_ous(self) -> None:
+    def fetch_ous(self) -> None:
         """Recurse the org tree and populate relationship data for nodes"""
         self.__l_ous()
 
@@ -324,13 +327,16 @@ class OrganizationDataBuilder(ModelBase):
         """Transform account data into a list of Account objects"""
         return [Account(**account) for account in self.__e_accounts()]
 
-    def __l_accounts(self) -> None:
+    def __l_accounts(self, include_parents: bool = False) -> None:
         """Load account objects with parent relationship data"""
         data = self.__t_accounts()
         accounts = []
         for result in data:
             account = result
-            account.parent = self.dm._child_parent_tree[account.id]
+            if include_parents:
+                if self.dm._child_parent_tree is None:
+                    self.fetch_ous()
+                account.parent = self.dm._child_parent_tree[account.id]
             accounts.append(account)
         self.dm.accounts = accounts
         if self.dm._account_index_map is None:
@@ -338,9 +344,9 @@ class OrganizationDataBuilder(ModelBase):
         for i, account in enumerate(self.dm.accounts):
             self.dm._account_index_map[account.id] = i
 
-    def init_accounts(self) -> None:
+    def fetch_accounts(self, **kwargs) -> None:
         """Initialize the list of Account objects in the organization"""
-        self.__l_accounts()
+        self.__l_accounts(**kwargs)
 
     def __e_effective_policies_for_target(
         self, target_id: str
@@ -357,144 +363,133 @@ class OrganizationDataBuilder(ModelBase):
             effective_policies.append(data)
         return effective_policies
 
-    def __e_effective_policies(self) -> Dict[int, List[Dict[str, Any]]]:
-        """Extract the effective policies for accounts"""
+    def __e_effective_policies(
+        self, account_ids: List[str] = None
+    ) -> Dict[int, List[Dict[str, Any]]]:
+        """Extract the effective policies for accounts or a list of account IDs"""
         ret = {}
         if self.dm.accounts is None:
-            self.init_accounts()
-        for account in self.dm.accounts:
-            ret[account.id] = self.__e_effective_policies_for_target(account.id)
+            self.fetch_accounts()
+        if account_ids is None:
+            account_ids = [account.id for account in self.dm.accounts]
+        for account_id in account_ids:
+            ret[account_id] = self.__e_effective_policies_for_target(account_id)
         return ret
 
-    def __t_effective_policies(self) -> Dict[int, List[EffectivePolicy]]:
+    def __t_effective_policies(self, **kwargs) -> Dict[int, List[EffectivePolicy]]:
         """Transform effective policy data into a list of EffectivePolicy"""
         return [EffectivePolicy(**d) for d in self.__e_effective_policies()]
 
-    def __l_effective_policies(self) -> None:
+    def __l_effective_policies(self, **kwargs) -> None:
         """Load effective policy objects into the account tree"""
         for acct_id, effective_policies in self.__e_effective_policies().items():
             acct_index = self.__lookup_account_index(acct_id)
             self.dm.accounts[acct_index].effective_policies = effective_policies
 
-    def init_effective_policies(self) -> None:
+    def fetch_effective_policies(self, **kwargs) -> None:
         """Initialize effective policy data for accounts in the org"""
-        self.__l_effective_policies()
+        self.__l_effective_policies(**kwargs)
 
-    def __e_tags_for_resource_ids(
-        self, resource_ids: List[str]
-    ) -> Dict[str, Dict[str, str]]:
-        """Fetch tags for a list of resource IDs (root, OUs, policies, accounts)"""
+    def __et_tags(self, resource_ids: List[str]) -> Dict[str, Dict[str, str]]:
+        """Extract and transform tags for a list of resource IDs"""
         ret = {}
         for resource_id in resource_ids:
             ret[resource_id] = query_tags(self.client, resource_id)
         return ret
 
-    def __et_tags(self, obj_type: str) -> Dict[str, Dict[str, str]]:
-        """Extract and transform tags for a specific node type"""
-        obj_type = obj_type.upper()
-        resource_ids = None
-        if obj_type == "ROOT" or obj_type == "ROOTS":
-            if self.dm.root is None:
-                self.init_root()
-            resource_ids = [self.dm.root.id]
-        elif (
-            obj_type == "ORGANIZATIONAL_UNIT"
-            or obj_type == "ORGANIZATIONAL_UNITS"
-            or obj_type == "OU"
-            or obj_type == "OUS"
-        ):
-            if self.dm.organizational_units is None:
-                self.init_ous()
-            resource_ids = [ou.id for ou in self.dm.organizational_units]
-        elif obj_type == "POLICY" or obj_type == "POLICIES":
-            if self.dm.policies is None:
-                self.init_policies()
-            resource_ids = [
-                pol.policy_summary.id
-                for pol in self.dm.policies
-                if not pol.policy_summary.aws_managed
-            ]
-        elif obj_type == "ACCOUNT" or obj_type == "ACCOUNTS":
-            if self.dm.accounts is None:
-                self.init_accounts()
-            resource_ids = [acct.id for acct in self.dm.accounts]
-        return self.__e_tags_for_resource_ids(resource_ids=resource_ids)
-
-    def __l_account_tags(self) -> None:
+    def __l_account_tags(self, account_ids: List[str] = None, **kwargs) -> None:
         """Load tags for accounts in the organization"""
-        for acct_id, tags in self.__et_tags("accounts").items():
+        if self.dm.accounts is None:
+            self.fetch_accounts()
+        if account_ids is None:
+            account_ids = [account.id for account in self.dm.accounts]
+        data = self.__et_tags(resource_ids=account_ids)
+        for acct_id, tags in data.items():
             acct_index = self.__lookup_account_index(acct_id)
             self.dm.accounts[acct_index].tags = tags
 
-    def init_account_tags(self) -> None:
+    def fetch_account_tags(self, **kwargs) -> None:
         """Initialize tags for accounts in the organization"""
-        self.__l_account_tags()
+        self.__l_account_tags(**kwargs)
 
-    def __l_ou_tags(self) -> None:
+    def __l_ou_tags(self, ou_ids: List[str] = None) -> None:
         """Load tags for OUs in the organization"""
-        for ou_id, tags in self.__et_tags("ous").items():
+        if self.dm.organizational_units is None:
+            self.fetch_organizational_units()
+        if ou_ids is None:
+            ou_ids = [ou.id for ou in self.dm.organizational_units]
+        data = self.__et_tags(resource_ids=ou_ids)
+        for ou_id, tags in data.items():
             ou_index = self.__lookup_ou_index(ou_id)
             self.dm.organizational_units[ou_index].tags = tags
 
-    def init_ou_tags(self) -> None:
+    def fetch_ou_tags(self, **kwargs) -> None:
         """Initialize tags for OUs in the organization"""
-        self.__l_ou_tags()
+        self.__l_ou_tags(**kwargs)
 
     def __l_root_tags(self) -> None:
         """Load tags for the organization root"""
         if self.dm.root is None:
-            self.init_root()
-        self.dm.root.tags = self.__et_tags("root")[self.dm.root.id]
+            self.fetch_root()
+        data = self.__et_tags(resource_ids=[self.dm.root.id])
+        self.dm.root.tags = data[self.dm.root.id]
 
-    def init_root_tags(self) -> None:
+    def fetch_root_tags(self) -> None:
         """Initialize tags for the organization root"""
         self.__l_root_tags()
 
-    def __l_policy_tags(self) -> None:
+    def __l_policy_tags(self, policy_ids: List[str] = None) -> None:
         """Load tags for policies in the organization"""
         if self.dm.policies is None:
-            self.init_policies()
-        for policy_id, tags in self.__et_tags("policies").items():
+            self.fetch_policies()
+        if policy_ids is None:
+            policy_ids = [
+                policy.policy_summary.id
+                for policy in self.dm.policies
+                if not policy.policy_summary.aws_managed
+            ]
+        data = self.__et_tags(resource_ids=policy_ids)
+        for policy_id, tags in data.items():
             policy_index = self.__lookup_policy_index(policy_id)
             self.dm.policies[policy_index].tags = tags
 
-    def init_policy_tags(self) -> None:
+    def fetch_policy_tags(self, **kwargs) -> None:
         """Initialize tags for policies in the organization"""
-        self.__l_policy_tags()
+        self.__l_policy_tags(**kwargs)
 
-    def init_all_tags(self) -> None:
+    def fetch_all_tags(self) -> None:
         """Initialize and populate tags for all taggable objects in the organization"""
-        self.init_root_tags()
-        self.init_policy_tags()
-        self.init_ou_tags()
-        self.init_account_tags()
+        self.fetch_root_tags()
+        self.fetch_policy_tags()
+        self.fetch_ou_tags()
+        self.fetch_account_tags()
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self, **kwargs) -> Dict[str, Any]:
         """Return the data model for the organization as a dictionary"""
-        return self.dm.as_dict()
+        return self.dm.as_dict(**kwargs)
 
-    def as_json(self) -> str:
+    def as_json(self, **kwargs) -> str:
         """Return the data model for the organization as a JSON string"""
-        return self.dm.as_json()
+        return self.dm.as_json(**kwargs)
 
-    def as_yaml(self) -> str:
+    def as_yaml(self, **kwargs) -> str:
         """Return the data model for the organization as a YAML string"""
-        return self.dm.as_yaml()
+        return self.dm.as_yaml(**kwargs)
 
-    def init_all(self) -> None:
+    def fetch_all(self) -> None:
         """Initialize all data for nodes and edges in the organization"""
         self.Connect()
-        self.init_organization()
-        self.init_root()
-        self.init_root_tags()
-        self.init_policies()
-        self.init_policy_tags()
-        self.init_ous()
-        self.init_ou_tags()
-        self.init_accounts()
-        self.init_account_tags()
-        self.init_policy_targets()
-        self.init_effective_policies()
+        self.fetch_organization()
+        self.fetch_root()
+        self.fetch_root_tags()
+        self.fetch_policies()
+        self.fetch_policy_tags()
+        self.fetch_ous()
+        self.fetch_ou_tags()
+        self.fetch_accounts()
+        self.fetch_account_tags()
+        self.fetch_policy_targets()
+        self.fetch_effective_policies()
 
     def __post_init__(
         self,
@@ -513,27 +508,27 @@ class OrganizationDataBuilder(ModelBase):
     ) -> None:
         """Initialize all or selected data for the organization"""
         if init_all:
-            self.init_all()
+            self.fetch_all()
             return
         if init_connection:
             self.Connect()
         if init_organization:
-            self.init_organization()
+            self.fetch_organization()
         if init_root:
-            self.init_root()
+            self.fetch_root()
         if init_policies:
-            self.init_policies()
+            self.fetch_policies()
         if init_policy_tags:
-            self.init_policy_tags()
+            self.fetch_policy_tags()
         if init_ous:
-            self.init_ous()
+            self.fetch_ous()
         if init_ou_tags:
-            self.init_ou_tags()
+            self.fetch_ou_tags()
         if init_accounts:
-            self.init_accounts()
+            self.fetch_accounts()
         if init_account_tags:
-            self.init_account_tags()
+            self.fetch_account_tags()
         if init_policy_targets:
-            self.init_policy_targets()
+            self.fetch_policy_targets()
         if init_effective_policies:
-            self.init_effective_policies()
+            self.fetch_effective_policies()
