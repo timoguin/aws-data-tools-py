@@ -1,10 +1,11 @@
-from dataclasses import asdict, dataclass, field
-from json import dumps as json_dumps
-from typing import Any, Dict, List, Union
+"""
+Dataclass models for working with AWS Organizations APIs
+"""
 
-from yaml import dump as yaml_dump
+from dataclasses import dataclass, field
+from typing import Dict, List
 
-from .. import ModelBase
+from . import ModelBase
 
 
 @dataclass
@@ -65,6 +66,8 @@ class PolicyTypeSummary(ModelBase):
 
 @dataclass
 class Policy(ModelBase):
+    """A policy in an organization"""
+
     policy_summary: PolicySummary
 
     # We allow content to be None because ListPolicies doesn't return the content data.
@@ -76,6 +79,7 @@ class Policy(ModelBase):
     targets: List[PolicyTargetSummary] = field(default=None)
 
     def as_target(self):
+        """Return the Policy as a PolicySummaryForTarget object"""
         return PolicySummaryForTarget(
             id=self.policy_summary.id, type=self.policy_summary.type
         )
@@ -83,6 +87,8 @@ class Policy(ModelBase):
 
 @dataclass
 class Root(ModelBase):
+    """The root in an organization"""
+
     arn: str
     id: str
     name: str
@@ -93,9 +99,11 @@ class Root(ModelBase):
     policies: List[PolicySummaryForTarget] = field(default=None)
 
     def as_parchild_dict(self) -> Dict[str, str]:
+        """Return the root as a ParChild (parent) dict"""
         return {"id": self.id, "type": "ROOT"}
 
     def as_parchild(self) -> ParChild:
+        """Return the root as a ParChild (parent) object"""
         return ParChild(**self.as_parchild_dict())
 
 
@@ -114,9 +122,11 @@ class OrganizationalUnit(ModelBase):
     tags: Dict[str, str] = field(default=None)
 
     def as_parchild_dict(self) -> Dict[str, str]:
+        """Return the OU as a ParChild (parent) dict"""
         return {"id": self.id, "type": "ORGANIZATIONAL_UNIT"}
 
     def as_parchild(self) -> ParChild:
+        """Return the OU as a ParChild (parent) object"""
         return ParChild(**self.as_parchild_dict())
 
 
@@ -139,9 +149,11 @@ class Account(ModelBase):
     tags: Dict[str, str] = field(default=None)
 
     def as_parchild_dict(self) -> Dict[str, str]:
+        """Return the account as a ParChild (parent) dict"""
         return {"id": self.id, "type": "ACCOUNT"}
 
     def as_parchild(self) -> ParChild:
+        """Return the account as a ParChild (parent) object"""
         return ParChild(**self.as_parchild_dict())
 
 

@@ -1,9 +1,13 @@
-from dataclasses import dataclass, field, InitVar
-from typing import Any, ClassVar, Dict, List, Union
+"""
+Module containing classes that abstract interactions with boto3 sessions and clients
+"""
+
+from dataclasses import dataclass, field
+from json import dumps as json_dumps
+from typing import Any, Dict, List, Union
 
 from boto3.session import Session
 from botocore.client import BaseClient
-from botocore.paginate import PageIterator, Paginator
 from humps import depascalize, pascalize
 
 
@@ -44,9 +48,9 @@ class APIClient:
                 key = [k for k in page.keys() if k not in metakeys][0]
                 responses.extend(page.get(key))
             return responses
-        else:
-            response = getattr(self.client, func)(**kwargs)
-            return depascalize(response)
+        # TODO: Fix logging to use structlog globally
+        response = getattr(self.client, func)(**kwargs)
+        return depascalize(response)
 
     def __post_init__(self):
         self.client = self.session.client(self.service)

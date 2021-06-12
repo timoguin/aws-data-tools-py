@@ -14,6 +14,16 @@ the unreleased section to the section for the new release.
 
 No unreleased changes.
 
+### Added
+
+- Adds an `organization lookup-accounts` CLI command
+- Adds a `field` argument to `ModelBase.as_dict()` to dump a single field in a model
+- Adds configurations for tox and other testing tools
+
+### Changed
+
+- Refactors `OrganizationDataBuilder` to allow more control over pulling data
+
 ## [0.1.0-beta1] - 2020-06-09
 
 ### Changed
