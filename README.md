@@ -1,101 +1,52 @@
+# AWS Data Tools
+
 An set of opinioned (but flexible) Python libraries for querying and transforming data
 from various AWS APIs, as well as a CLI interface.
 
 This is in early development.
 
-# Installation
+## Installation
 
 Using pip should work on any system with at least Python 3.9:
 
-```shell
+```
 $ pip install aws-data-tools
 ```
 
 By default, the CLI is not installed. To include it, you can specify it as an extra:
 
-```shell
+```
 $ pip install aws-data-tools[cli]
 ```
 
-# Usage
+## Quickstart
+
+The quickest entrypoints are using the data builders and the CLI.
+
+To dump a data representation of an AWS Organization, you can do the following using
+the builder:
+
+```python
+from aws_data_tools.builders.organizations import OrganizationDataBuilder
+
+odb = OrganizationDataBuilder(init_all=True)
+organization = odb.as_json()
+```
+
+Here is how to do the same thing with the CLI:
+
+```
+$ awsdata organization dump-json
+```
+
+## Usage
 
 There are currently 4 main components of the package: helpers for working with AWS
 session and APIs, data models for API data types, builders to query AWS APIs and
 perform deserialization and ETL operations of raw data, and a CLI tool to further
 abstract some of these operations.
 
-## API Client
-
-The [APIClient](aws_data_models/client.py) class wraps the initialization of a boto3
-session and a low-level client for a named service. It contains a single `api()`
-function that takes the name of an API operation and any necessary request data as
-kwargs.
-
-It supports automatic pagination of any API operations that support it. The pagination
-config is set to `{'MaxItems': 500}` by default, but a `pagination_config` dict can be
-passed for any desired customizations.
-
-When initializing the class, it will create a session and a client.
-
-```python
-from aws_data_tools.client import APIClient
-
-client = APIClient("organizations")
-org = client.api("describe_organization").get("organization")
-roots = client.api("list_roots")
-ous = client.api("list_organizational_units_for_parent", parent_id="r-abcd").get(
-    "organizational_units"
-)
-```
-
-Note that, generally, any list operations will return a list with no further filtering
-required, while describe calls will have the data keyed under the name of the object
-being described. For example, describing an organization returns the relavant data
-under an `organization` key.
-
-Furthermore, you may notice above that API operations and their corresponding arguments
-support `snake_case` format. Arguments can also be passed in the standard `PascalCase`
-format that the APIs utilize. Any returned data has any keys converted to `snake_case`.
-
-The raw boto3 session is available as the `session` field, and the raw, low-level
-client is available as the `client` field.
-
-## Data Models
-
-The [models](aws_data_tools/models) package contains a collection of opinionated models
-implemented as data classes. There is a package for each available service. Each one is
-named after the service that would be passed when creating a boto3 client using
-`boto3.client('service_name')`.
-
-Most data types used with the Organizations APIs are supported. The top-level
-`Organization` class is the most useful, as it also acts as a container for all other
-related data in the organization.
-
-The following data types and operations are currently not supported:
-
-- Viewing organization handshakes (for creating and accepting account invitations)
-- Viewing the status of accounts creations
-- Viewing organization integrations with AWS services (for org-wide implementations of
-  things like CloudTrail, Config, etc.)
-- Viewing delegated accounts and services
-- Any operations that are not read-only
-
-All other data types are supported.
-
-```python
-from aws_data_tools.client import APIClient
-from aws_data_tools.models.organizations import Organization
-
-client = APIClient("organizations")
-data = client.api("describe_organization").get("organization")
-org = Organization(**data)
-org.as_json()
-```
-
-View the [package](aws_data_tools/models/organization/__init__.py) for the full list of
-models.
-
-## Builders
+### Builders
 
 While it is possible to directly utilize and interact with the data models, probably
 the largest benefit is the [builders](aws_data_tools/builders) package. It abstracts
@@ -144,19 +95,19 @@ org.init_policy_targets()
 org.init_effective_policies()
 ```
 
-## CLI
+### CLI
 
 As noted above, the CLI is an optional component that can be installed using pip's
 bracket notation for extras:
 
-```shell
+```
 $ pip install aws-data-tools[cli]
 ```
 
 With no arguments or flags, help content is displayed by default. You can also pass the
 `--help` flag for the help content of any commands or subcommands.
 
-```shell
+```
 $ awsdata
 Usage: awsdata [OPTIONS] COMMAND [ARGS]...
 
@@ -175,7 +126,7 @@ Here is how to dump a JSON representation of an AWS Organization to stdout:
 
 The `organization` subcommand allows dumping organization data to a file or to stdout:
 
-```shell
+```
 $ awsdata organization dump-json --format json
 Usage: awsdata organization dump-json [OPTIONS]
 
@@ -188,6 +139,95 @@ Options:
   -o, --out-file TEXT       File path to write data instead of stdout
   -h, --help                Show this message and exit.
 ```
+
+It also supports looking up details about individual accounts:
+
+```
+$ awsdata organization lookup-accounts --help
+Usage: awsdata organization lookup-accounts [OPTIONS]
+
+  Query for account details using a list of account IDs
+
+Options:
+  -a, --accounts TEXT           A space-delimited list of account IDs
+                                [required]
+  --include-effective-policies  Include effective policies for the accounts
+  --include-parents             Include parent data for the accounts
+  --include-tags                Include tags applied to the accounts
+  --include-policies            Include policies attached to the accounts
+  -h, --help                    Show this message and exit.
+```
+
+### API Client
+
+The [APIClient](aws_data_models/client.py) class wraps the initialization of a boto3
+session and a low-level client for a named service. It contains a single `api()`
+function that takes the name of an API operation and any necessary request data as
+kwargs.
+
+It supports automatic pagination of any API operations that support it. The pagination
+config is set to `{'MaxItems': 500}` by default, but a `pagination_config` dict can be
+passed for any desired customizations.
+
+When initializing the class, it will create a session and a client.
+
+```python
+from aws_data_tools.client import APIClient
+
+client = APIClient("organizations")
+org = client.api("describe_organization").get("organization")
+roots = client.api("list_roots")
+ous = client.api("list_organizational_units_for_parent", parent_id="r-abcd").get(
+    "organizational_units"
+)
+```
+
+Note that, generally, any list operations will return a list with no further filtering
+required, while describe calls will have the data keyed under the name of the object
+being described. For example, describing an organization returns the relavant data
+under an `organization` key.
+
+Furthermore, you may notice above that API operations and their corresponding arguments
+support `snake_case` format. Arguments can also be passed in the standard `PascalCase`
+format that the APIs utilize. Any returned data has any keys converted to `snake_case`.
+
+The raw boto3 session is available as the `session` field, and the raw, low-level
+client is available as the `client` field.
+
+### Data Models
+
+The [models](aws_data_tools/models) package contains a collection of opinionated models
+implemented as data classes. There is a package for each available service. Each one is
+named after the service that would be passed when creating a boto3 client using
+`boto3.client('service_name')`.
+
+Most data types used with the Organizations APIs are supported. The top-level
+`Organization` class is the most useful, as it also acts as a container for all other
+related data in the organization.
+
+The following data types and operations are currently not supported:
+
+- Viewing organization handshakes (for creating and accepting account invitations)
+- Viewing the status of accounts creations
+- Viewing organization integrations with AWS services (for org-wide implementations of
+  things like CloudTrail, Config, etc.)
+- Viewing delegated accounts and services
+- Any operations that are not read-only
+
+All other data types are supported.
+
+```python
+from aws_data_tools.client import APIClient
+from aws_data_tools.models.organizations import Organization
+
+client = APIClient("organizations")
+data = client.api("describe_organization").get("organization")
+org = Organization(**data)
+org.as_json()
+```
+
+View the [package](aws_data_tools/models/organization/__init__.py) for the full list of
+models.
 
 ## Roadmap
 

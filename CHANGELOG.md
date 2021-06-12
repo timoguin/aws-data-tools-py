@@ -19,6 +19,7 @@ No unreleased changes.
 - Adds an `organization lookup-accounts` CLI command
 - Adds a `field` argument to `ModelBase.as_dict()` to dump a single field in a model
 - Adds configurations for tox and other testing tools
+- Adds a quickstart to the top of the README
 
 ### Changed
 
