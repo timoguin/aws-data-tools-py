@@ -1,6 +1,15 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
 
 jobs:
   lint:
@@ -32,5 +41,9 @@ jobs:
             .tox
           key: ${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
-			- name: Run tests
-				run: make lint
+      - name: Install dependencies
+        if: steps.cache-venvs.outputs.cache-hit != 'true'
+        run: make python-install-deps PY_INSTALL_ARGS="--extras=docs"
+
+      - name: Run tests
+        run: make lint
