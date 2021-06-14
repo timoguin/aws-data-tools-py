@@ -3,7 +3,6 @@ Module containing classes that abstract interactions with boto3 sessions and cli
 """
 
 from dataclasses import dataclass, field
-from json import dumps as json_dumps
 from typing import Any, Dict, List, Union
 
 from boto3.session import Session

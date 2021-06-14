@@ -8,10 +8,8 @@ from traceback import format_exc
 from typing import Any, Dict, List, Union
 
 from botocore.exceptions import ClientError, NoCredentialsError
-from yaml import dump as yaml_dump
 
 from click import (
-    command,
     echo,
     group,
     open_file,
@@ -102,19 +100,19 @@ def dump_json(
             kwargs["init_policies"] = False
             kwargs["init_policy_tags"] = False
             kwargs["init_policy_targets"] = False
-        org = odb(**kwargs)
+        odb = OrganizationDataBuilder(**kwargs)
         if format_ == "JSON":
-            s_func = org.as_json
+            s_func = odb.as_json
         elif format_ == "YAML":
-            s_func = org.as_yaml
+            s_func = odb.as_yaml
         if out_file is None:
             out_file = "-"
         with open_file(out_file, mode="wb") as f:
             f.write(bytes(s_func(), "utf-8"))
     except ClientError as exc_info:
         err_msg = f"Service Error: {str(exc_info)}"
-    except NoCredentialsError as exc_info:
-        err_msg = f"Error: Unable to locate AWS credentials"
+    except NoCredentialsError:
+        err_msg = "Error: Unable to locate AWS credentials"
     except Exception as exc_info:
         err_msg = f"Unknown Error: {str(exc_info)}"
         tb = format_exc()
@@ -161,7 +159,7 @@ def lookup_accounts(
     if " " in accounts:
         accounts_unvalidated = accounts.split(" ")
     else:
-        account_unvalidated = [accounts]
+        accounts_unvalidated = [accounts]
     account_ids = []
     invalid_ids = []
     for account in accounts_unvalidated:
@@ -202,7 +200,3 @@ def lookup_accounts(
         if acct.id in account_ids
     ]
     echo(json_dumps(data, default=str))
-
-
-if __name__ == "__main__":
-    cli(ctx, auto_envvar_prefix="AWSDATA")

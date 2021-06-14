@@ -1,0 +1,30 @@
+import os
+
+import pytest
+from moto import mock_organizations
+
+# from aws_data_tools.client import APIClient
+from aws_data_tools.builders.organizations import OrganizationDataBuilder
+
+
+@pytest.fixture(scope="function")
+def aws_credentials():
+    """Mocked AWS Credentials for moto"""
+    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
+    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+    os.environ["AWS_SECURITY_TOKEN"] = "testing"
+    os.environ["AWS_SESSION_TOKEN"] = "testing"
+
+
+@pytest.fixture
+@mock_organizations
+def organization_data_builder():
+    """Initialize a connected builder for Organizations"""
+    return OrganizationDataBuilder(init_connect=True)
+
+
+@mock_organizations
+def test_fetch_organization(aws_credentials, organization_data_builder):
+    """Test initial querying of Organization data with the builder"""
+    organization_data_builder.fetch_organization()
+    data = organization_data_builder.as_json()

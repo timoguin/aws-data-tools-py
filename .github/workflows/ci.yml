@@ -12,9 +12,9 @@ on:
       - synchronize
 
 jobs:
-  lint:
+  create-venv:
+    name: Setup
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v1
@@ -32,18 +32,98 @@ jobs:
           virtualenvs-create: false
           virtualenvs-in-project: true
 
-      - name: Load cached venvs
-        id: cached-venvs
-        uses: actions/cache@v2
-        with:
-          path: |
-            .venv
-            .tox
-          key: ${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Restore cached venv
+        uses: syphar/restore-virtualenv@v1
+        id: cache-venv
 
-      - name: Install dependencies
-        if: steps.cache-venvs.outputs.cache-hit != 'true'
+      - name: Restore Pip download cache
+        uses: syphar/restore-pip-download-cache@v1
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+
+      - name: Install Python dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
         run: make python-install-deps PY_INSTALL_ARGS="--extras=docs"
 
+  lint:
+    name: Lint
+    needs: create-venv
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.1.6
+        with:
+          virtualenvs-create: false
+          virtualenvs-in-project: true
+
+      - name: Restore cached venv
+        uses: syphar/restore-virtualenv@v1
+        id: cache-venv
+
+      - name: Run linting tools
+        run: make lint lint-docs
+
+  build:
+    name: Build
+    needs: create-venv
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.1.6
+        with:
+          virtualenvs-create: false
+          virtualenvs-in-project: true
+
+      - name: Restore cache venv
+        uses: syphar/restore-virtualenv@v1
+        id: cache-venv
+
+      - name: Build package
+        run: make build
+
+  test:
+    name: Test
+    needs: create-venv
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.1.6
+        with:
+          virtualenvs-create: false
+          virtualenvs-in-project: true
+
+      - name: Restore cache venv
+        uses: syphar/restore-virtualenv@v1
+        id: cache-venv
+
       - name: Run tests
-        run: make lint
+        run: make test

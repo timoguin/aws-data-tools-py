@@ -27,20 +27,16 @@ shellcmd: ${VENV_DIR}
 	@${SHELL_CMD_PREFIX} /bin/bash -c "poetry run ${CMD}"
 
 .PHONY: lint
-lint:
-	@if [ -z $$VIRTUAL_ENV ]; then       \
-	     poetry run tox --quiet -e lint; \
-	 else                                \
-	     tox --quiet -e lint;            \
-	 fi
+lint: ${VENV_DIR}
+	@echo "Running the black code formatter"
+	@poetry run black ${ARGS} .
+	@echo "Running flakehell plugins"
+	@poetry run flakehell lint aws_data_tools
 
 .PHONY: lint-docs
-lint-docs:
-	@if [ -z $$VIRTUAL_ENV ]; then            \
-	     poetry run tox --quiet -e lint-docs; \
-	 else                                     \
-	     tox --quiet -e lint-docs;            \
-	 fi
+lint-docs: ${VENV_DIR}
+	@echo "Running blacken code formatter for Markdown code blocks"
+	@poetry run blacken-docs *.md
 
 .PHONY: test-integration ## Run the integration test suite
 test-integration: run-test-server
@@ -69,7 +65,13 @@ stop-test-server:
 
 .PHONY: build ## Build the Python package for distribution
 build: ${VENV_DIR}
+	@echo "Building the Python package"
 	@poetry build --quiet --no-interaction
+
+.PHONY: test ## Run the test suite
+test: ${VENV_DIR}
+	@echo "Running test suite"
+	@poetry run pytest --suppress-no-test-exit-code
 
 # Ensures the Python venv exists and has dependencies installed
 ${VENV_DIR}:
