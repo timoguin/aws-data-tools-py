@@ -5,11 +5,8 @@ Builder utilies for working with data from AWS Organizations APIs
 from dataclasses import dataclass, field, InitVar
 from typing import Any, Dict, List, Union
 
-from botocore.client import BaseClient
-from botocore.session import Session
-
 from ..client import APIClient
-from ..models import ModelBase
+from ..models.base import ModelBase
 from ..utils import query_tags
 
 from ..models.organizations import (

@@ -5,7 +5,7 @@ Dataclass models for working with AWS Organizations APIs
 from dataclasses import dataclass, field
 from typing import Dict, List
 
-from . import ModelBase
+from .base import ModelBase
 
 
 @dataclass
