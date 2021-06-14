@@ -29,9 +29,9 @@ shellcmd: ${VENV_DIR}
 .PHONY: lint
 lint: ${VENV_DIR}
 	@echo "Running the black code formatter"
-	@black ${ARGS} .
+	@poetry run black ${ARGS} .
 	@echo "Running flakehell plugins"
-	@flakehell lint aws_data_tools
+	@poetry run flakehell lint aws_data_tools
 
 .PHONY: lint-docs
 lint-docs:
