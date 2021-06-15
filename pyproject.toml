@@ -51,11 +51,16 @@ mkdocs-material = {version = "^7.1.5", optional = true, extras = ["docs"]}
 
 [tool.poetry.dev-dependencies]
 black = "^21.5b1"
-flake8 = "^3.9.2"
+flakehell = "^0.9.0"
 isort = "^5.8.0"
 pylint = "^2.8.3"
 pytest = "^6.2.4"
 tox-poetry = "^0.4.0"
+moto = "^2.0.9"
+pycodestyle = "^2.7.0"
+pyflakes = "^2.3.1"
+mccabe = "^0.6.1"
+pytest-custom-exit-code = "^0.3.0"
 
 [tool.poetry.extras]
 cli = ["click"]
@@ -84,3 +89,23 @@ line-length = 88
 
 [tool.isort]
 profile = "black"
+
+[tool.pylint.messages_control]
+disable = "C0330, C0326"
+
+[tool.pylint.format]
+max-line-length = "88"
+
+[tool.flakehell]
+format = "colored"
+max_line_length = 88
+show_source = true
+
+# Fixes a flake8 compat bug: https://github.com/flakehell/flakehell/issues/10
+extended_default_ignore = []
+
+[tool.flakehell.plugins]
+mccabe = ["+*"]
+pycodestyle = ["+*"]
+pyflakes = ["+*"]
+pylint = ["+*"]
