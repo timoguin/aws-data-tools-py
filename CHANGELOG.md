@@ -14,6 +14,8 @@ the unreleased section to the section for the new release.
 
 No unreleased changes.
 
+## [0.1.0-beta2] - 2021-06-16
+
 ### Added
 
 - Adds an `organization lookup-accounts` CLI command
@@ -36,7 +38,7 @@ No unreleased changes.
 - Updates `APIClient()` and `APIClient.Connect()` to skip creating the client if it
   already exists
 
-## [0.1.0-beta1] - 2020-06-09
+## [0.1.0-beta1] - 2021-06-09
 
 ### Changed
 
@@ -45,7 +47,7 @@ No unreleased changes.
 - Bumps version to 0.1.0-beta1
 - Adds a CI config for Semantic Pull Requests
 
-## [0.1.0-alpha4] - 2020-06-09
+## [0.1.0-alpha4] - 2021-06-09
 
 Initial alpha release
 
@@ -66,6 +68,7 @@ Initial alpha release
 These Markdown anchors provide a link to the diff for each release. They should be
 updated any time a new release is cut.
 -->
-[Unreleased]: https://github.com/timoguin/aws-org-tools-py/compare/v0.1.0-beta-1...HEAD
+[Unreleased]: https://github.com/timoguin/aws-org-tools-py/compare/v0.1.0-beta-2...HEAD
+[0.1.0-beta2]: https://github.com/timoguin/aws-org-tools-py/compare/v0.1.0-beta1...v0.1.0-beta2
 [0.1.0-beta1]: https://github.com/timoguin/aws-org-tools-py/compare/v0.1.0-alpha4...v0.1.0-beta1
 [0.1.0-alpha4]: https://github.com/timoguin/aws-org-tools-py/releases/tag/v0.1.0-alpha4
