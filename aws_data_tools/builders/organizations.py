@@ -5,6 +5,8 @@ Builder utilies for working with data from AWS Organizations APIs
 from dataclasses import dataclass, field, InitVar
 from typing import Any, Dict, List, Union
 
+from graphviz import Digraph, unflatten
+
 from ..client import APIClient
 from ..models.base import ModelBase
 from ..utils import query_tags
@@ -77,6 +79,34 @@ class OrganizationDataBuilder(ModelBase):
         if self.client is None:
             self.Connect()
         return self.client.api(func, **kwargs)
+
+    def to_dot(self) -> str:
+        """Return the organization as a GraphViz DOT diagram"""
+        graph = Digraph("Organization", filename="organization.dot")
+        nodes = []
+        nodes.append(self.dm.root)
+        nodes.extend(self.dm.organizational_units)
+        nodes.extend(self.dm.accounts)
+        for node in nodes:
+            if getattr(node, "parent", None) is None:
+                continue
+            shape = None
+            if isinstance(node, Root):
+                shape = "circle"
+            elif isinstance(node, OrganizationalUnit):
+                shape = "box"
+            elif isinstance(node, Account):
+                shape = "ellipse"
+            else:
+                continue
+            graph.node(node.id, label=node.name, shape=shape)
+            graph.edge(node.parent.id, node.id)
+        return unflatten(
+            graph.source,
+            stagger=10,
+            fanout=10,
+            chain=10,
+        )
 
     def __e_organization(self) -> Dict[str, str]:
         """Extract org description data from the DescribeOrganization API"""

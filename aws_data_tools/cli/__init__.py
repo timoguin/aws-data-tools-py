@@ -65,6 +65,14 @@ def handle_error(ctx, err_msg, tb=None):
 
 @organization.command(short_help="Dump org data as JSON")
 @option(
+    "--format",
+    "-f",
+    "format_",
+    default="JSON",
+    type=Choice(["DOT", "JSON", "YAML"], case_sensitive=False),
+    help="The output format for the data",
+)
+@option(
     "--no-accounts",
     default=False,
     is_flag=True,
@@ -76,24 +84,16 @@ def handle_error(ctx, err_msg, tb=None):
     is_flag=True,
     help="Exclude policy data from the model",
 )
-@option(
-    "--format",
-    "-f",
-    "format_",
-    default="JSON",
-    type=Choice(["JSON", "YAML"], case_sensitive=False),
-    help="The output format for the data",
-)
 @option("--out-file", "-o", help="File path to write data instead of stdout")
 @pass_context
-def dump_json(
+def dump_all(
     ctx: Dict[str, Any],
+    format_: str,
     no_accounts: bool,
     no_policies: bool,
-    format_: str,
     out_file: str,
 ) -> None:
-    """Dump a JSON representation of the organization"""
+    """Dump a data representation of the organization"""
     err_msg = None
     tb = None
     try:
@@ -114,6 +114,8 @@ def dump_json(
             s_func = odb.to_json
         elif format_ == "YAML":
             s_func = odb.to_yaml
+        elif format_ == "DOT":
+            s_func = odb.to_dot
         if out_file is None:
             out_file = "-"
         with open_file(out_file, mode="wb") as f:
