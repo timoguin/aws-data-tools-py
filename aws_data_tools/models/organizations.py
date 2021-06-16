@@ -78,7 +78,7 @@ class Policy(ModelBase):
     tags: Dict[str, str] = field(default=None)
     targets: List[PolicyTargetSummary] = field(default=None)
 
-    def as_target(self):
+    def to_target(self):
         """Return the Policy as a PolicySummaryForTarget object"""
         return PolicySummaryForTarget(
             id=self.policy_summary.id, type=self.policy_summary.type
@@ -98,13 +98,13 @@ class Root(ModelBase):
     children: List[ParChild] = field(default=None)
     policies: List[PolicySummaryForTarget] = field(default=None)
 
-    def as_parchild_dict(self) -> Dict[str, str]:
+    def to_parchild_dict(self) -> Dict[str, str]:
         """Return the root as a ParChild (parent) dict"""
         return {"id": self.id, "type": "ROOT"}
 
-    def as_parchild(self) -> ParChild:
+    def to_parchild(self) -> ParChild:
         """Return the root as a ParChild (parent) object"""
-        return ParChild(**self.as_parchild_dict())
+        return ParChild(**self.to_parchild_dict())
 
 
 @dataclass
@@ -121,13 +121,13 @@ class OrganizationalUnit(ModelBase):
     policies: List[PolicySummaryForTarget] = field(default=None)
     tags: Dict[str, str] = field(default=None)
 
-    def as_parchild_dict(self) -> Dict[str, str]:
+    def to_parchild_dict(self) -> Dict[str, str]:
         """Return the OU as a ParChild (parent) dict"""
         return {"id": self.id, "type": "ORGANIZATIONAL_UNIT"}
 
-    def as_parchild(self) -> ParChild:
+    def to_parchild(self) -> ParChild:
         """Return the OU as a ParChild (parent) object"""
-        return ParChild(**self.as_parchild_dict())
+        return ParChild(**self.to_parchild_dict())
 
 
 @dataclass
@@ -148,13 +148,13 @@ class Account(ModelBase):
     policies: List[PolicySummaryForTarget] = field(default=None)
     tags: Dict[str, str] = field(default=None)
 
-    def as_parchild_dict(self) -> Dict[str, str]:
+    def to_parchild_dict(self) -> Dict[str, str]:
         """Return the account as a ParChild (parent) dict"""
         return {"id": self.id, "type": "ACCOUNT"}
 
-    def as_parchild(self) -> ParChild:
+    def to_parchild(self) -> ParChild:
         """Return the account as a ParChild (parent) object"""
-        return ParChild(**self.as_parchild_dict())
+        return ParChild(**self.to_parchild_dict())
 
 
 @dataclass
@@ -172,6 +172,12 @@ class Organization(ModelBase):
     master_account_id: str = field(default=None)
 
     # Optional properties generally populated after initialization
+
+    # TODO: These collections should be converted to container data classes to be able
+    # to better able to handle operations against specific fields. Currently,
+    # serializing/deserializing these collections indepently requires passing the
+    # "field_name" kwarg to the `to_dict()` function from ModelBase. It's already
+    # getting hacky.
     accounts: List[Account] = field(default=None)
     organizational_units: List[OrganizationalUnit] = field(default=None)
     policies: List[Policy] = field(default=None)

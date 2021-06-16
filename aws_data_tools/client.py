@@ -33,7 +33,7 @@ class APIClient:
         If the API action is one that supports pagination, it is handled automaticaly.
         All paginated responses are fully aggregated and then returned.
         """
-        kwargs = pascalize(kwargs)
+        kwargs = {pascalize(key): value for key, value in kwargs.items()}
         paginate = self.client.can_paginate(func)
         if paginate:
             paginator = self.client.get_paginator(func)
@@ -52,4 +52,5 @@ class APIClient:
         return depascalize(response)
 
     def __post_init__(self):
-        self.client = self.session.client(self.service)
+        if self.client is None:
+            self.client = self.session.client(self.service)

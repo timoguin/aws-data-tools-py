@@ -8,12 +8,14 @@ from typing import Any, Dict, List, Union
 
 from yaml import dump as yaml_dump
 
+from ..utils import serialize_dynamodb_item, serialize_dynamodb_items
+
 
 @dataclass
 class ModelBase:
     """Base class for all models with helpers for serialization"""
 
-    def as_dict(
+    def to_dict(
         self, field_name: str = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """
@@ -30,10 +32,17 @@ class ModelBase:
             raise Exception(f"Field {field_name} does not exist")
         return data
 
-    def as_json(self, **kwargs) -> str:
-        """Serialize the dataclass instance to JSON"""
-        return json_dumps(self.as_dict(**kwargs), default=str)
+    def to_dynamodb(self, **kwargs) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+        """Serialize the dataclass or field to a DynamoDB Item or list of Items"""
+        data = self.to_dict(**kwargs)
+        if isinstance(data, list):
+            return serialize_dynamodb_items(items=data)
+        return serialize_dynamodb_item(item=data)
 
-    def as_yaml(self, **kwargs) -> str:
+    def to_json(self, **kwargs) -> str:
+        """Serialize the dataclass instance to JSON"""
+        return json_dumps(self.to_dict(**kwargs), default=str)
+
+    def to_yaml(self, **kwargs) -> str:
         """Serialize the dataclass instance to YAML"""
-        return yaml_dump(self.as_dict(**kwargs))
+        return yaml_dump(self.to_dict(**kwargs))

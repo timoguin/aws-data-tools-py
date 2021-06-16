@@ -48,7 +48,7 @@ class OrganizationDataBuilder(ModelBase):
     Provides serialization to dicts and JSON.
     """
 
-    client: APIClient = field(default=None, init=False, repr=False)
+    client: APIClient = field(default=None, repr=False)
     dm: Organization = field(default_factory=Organization)
 
     # Used by __post_init__() to determine what data to initialize (default is none)
@@ -65,9 +65,12 @@ class OrganizationDataBuilder(ModelBase):
     init_policy_targets: InitVar[bool] = field(default=False)
     init_effective_policies: InitVar[bool] = field(default=False)
 
+    include_account_parents: bool = field(default=False)
+
     def Connect(self):
         """Initialize an authenticated session"""
-        self.client = APIClient(_SERVICE_NAME)
+        if self.client is None:
+            self.client = APIClient(_SERVICE_NAME)
 
     def api(self, func: str, **kwargs) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         """Make arbitrary API calls with the session client"""
@@ -257,7 +260,7 @@ class OrganizationDataBuilder(ModelBase):
         if parents is None:
             if self.dm.root is None:
                 self.fetch_root()
-            parents = [self.dm.root.as_parchild()]
+            parents = [self.dm.root.to_parchild()]
         if self.dm._parent_child_tree is None:
             self.dm._parent_child_tree = {}
         if self.dm._child_parent_tree is None:
@@ -277,15 +280,15 @@ class OrganizationDataBuilder(ModelBase):
             )
             for ou_result in ou_results:
                 ou = OrganizationalUnit(parent=parent, **ou_result)
-                ou_as_parchild = ou.as_parchild()
-                self.dm._parent_child_tree[parent.id].append(ou_as_parchild)
+                ou_to_parchild = ou.to_parchild()
+                self.dm._parent_child_tree[parent.id].append(ou_to_parchild)
                 self.dm._child_parent_tree[ou.id] = parent
                 ous.append(ou)
-                next_parents.append(ou_as_parchild)
+                next_parents.append(ou_to_parchild)
             acct_results = self.api("list_accounts_for_parent", parent_id=parent.id)
             for acct_result in acct_results:
                 account = Account(parent=parent, **acct_result)
-                self.dm._parent_child_tree[parent.id].append(account.as_parchild())
+                self.dm._parent_child_tree[parent.id].append(account.to_parchild())
                 self.dm._child_parent_tree[account.id] = parent
         return self.__e_ous_recurse(parents=next_parents, ous=ous, depth=depth + 1)
 
@@ -330,7 +333,7 @@ class OrganizationDataBuilder(ModelBase):
         accounts = []
         for result in data:
             account = result
-            if include_parents:
+            if include_parents or self.include_account_parents:
                 if self.dm._child_parent_tree is None:
                     self.fetch_ous()
                 account.parent = self.dm._child_parent_tree[account.id]
@@ -461,17 +464,21 @@ class OrganizationDataBuilder(ModelBase):
         self.fetch_ou_tags()
         self.fetch_account_tags()
 
-    def as_dict(self, **kwargs) -> Dict[str, Any]:
+    def to_dict(self, **kwargs) -> Dict[str, Any]:
         """Return the data model for the organization as a dictionary"""
-        return self.dm.as_dict(**kwargs)
+        return self.dm.to_dict(**kwargs)
 
-    def as_json(self, **kwargs) -> str:
+    def to_dynamodb(self, **kwargs) -> Dict[str, Any]:
+        """Return the data model for the organization as a DynamoDB Item"""
+        return self.dm.to_dynamodb(**kwargs)
+
+    def to_json(self, **kwargs) -> str:
         """Return the data model for the organization as a JSON string"""
-        return self.dm.as_json(**kwargs)
+        return self.dm.to_json(**kwargs)
 
-    def as_yaml(self, **kwargs) -> str:
+    def to_yaml(self, **kwargs) -> str:
         """Return the data model for the organization as a YAML string"""
-        return self.dm.as_yaml(**kwargs)
+        return self.dm.to_yaml(**kwargs)
 
     def fetch_all(self) -> None:
         """Initialize all data for nodes and edges in the organization"""
