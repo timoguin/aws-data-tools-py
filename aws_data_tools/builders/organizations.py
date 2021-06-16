@@ -48,7 +48,7 @@ class OrganizationDataBuilder(ModelBase):
     Provides serialization to dicts and JSON.
     """
 
-    client: APIClient = field(default=None, init=False, repr=False)
+    client: APIClient = field(default=None, repr=False)
     dm: Organization = field(default_factory=Organization)
 
     # Used by __post_init__() to determine what data to initialize (default is none)
@@ -65,9 +65,12 @@ class OrganizationDataBuilder(ModelBase):
     init_policy_targets: InitVar[bool] = field(default=False)
     init_effective_policies: InitVar[bool] = field(default=False)
 
+    include_account_parents: bool = field(default=False)
+
     def Connect(self):
         """Initialize an authenticated session"""
-        self.client = APIClient(_SERVICE_NAME)
+        if self.client is None:
+            self.client = APIClient(_SERVICE_NAME)
 
     def api(self, func: str, **kwargs) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         """Make arbitrary API calls with the session client"""
@@ -330,7 +333,7 @@ class OrganizationDataBuilder(ModelBase):
         accounts = []
         for result in data:
             account = result
-            if include_parents:
+            if include_parents or self.include_account_parents:
                 if self.dm._child_parent_tree is None:
                     self.fetch_ous()
                 account.parent = self.dm._child_parent_tree[account.id]

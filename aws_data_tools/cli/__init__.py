@@ -2,10 +2,12 @@
 CLI interface for working with data from AWS APIs
 """
 
+from itertools import zip_longest
 from json import dumps as json_dumps
+from json import load as json_load
 from re import fullmatch
 from traceback import format_exc
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 from botocore.exceptions import ClientError, NoCredentialsError
 
@@ -21,7 +23,9 @@ from click import (
 )
 
 from .. import get_version
+from ..client import APIClient
 from ..builders.organizations import OrganizationDataBuilder
+from ..utils import dict_to_dynamodb_item
 
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
@@ -54,7 +58,7 @@ def handle_error(ctx, err_msg, tb=None):
         ctx.exit(1)
 
 
-@organization.command()
+@organization.command(short_help="Dump org data as JSON")
 @option(
     "--no-accounts",
     default=False,
@@ -83,7 +87,7 @@ def dump_json(
     no_policies: bool,
     format_: str,
     out_file: str,
-) -> Union[str, None]:
+) -> None:
     """Dump a JSON representation of the organization"""
     err_msg = None
     tb = None
@@ -100,7 +104,7 @@ def dump_json(
             kwargs["init_policies"] = False
             kwargs["init_policy_tags"] = False
             kwargs["init_policy_targets"] = False
-        odb = OrganizationDataBuilder(**kwargs)
+        odb = OrganizationDataBuilder(include_account_parents=True, **kwargs)
         if format_ == "JSON":
             s_func = odb.as_json
         elif format_ == "YAML":
@@ -153,7 +157,7 @@ def lookup_accounts(
     include_effective_policies: bool,
     include_policies: bool,
     include_tags: bool,
-) -> str:
+) -> None:
     """Query for account details using a list of account IDs"""
     accounts_unvalidated = []
     if " " in accounts:
@@ -200,3 +204,32 @@ def lookup_accounts(
         if acct.id in account_ids
     ]
     echo(json_dumps(data, default=str))
+
+
+@organization.command()
+@option("--table", "-t", required=True, help="Name of the DynamoDB table")
+@option(
+    "--in-file", "-i", required=True, help="File containing a list of Account objects"
+)
+@pass_context
+def write_accounts_to_dynamodb(
+    ctx: Dict[str, Any],
+    table: str,
+    in_file: str,
+) -> None:
+    """Write a list of accounts to a DynamoDB table"""
+    client = APIClient("dynamodb")
+    data = None
+    with open_file(in_file, mode="r") as f:
+        data = json_load(f)
+    ret = {"responses": []}
+    for group_ in zip_longest(*[iter(data)] * 25):
+        accounts = [
+            dict_to_dynamodb_item(account) for account in group_ if account is not None
+        ]
+        req_data = {table: [{"PutRequest": {"Item": account}} for account in accounts]}
+        # TODO: Add handling of any "UnprocessedItems" in the response. Add retry with
+        # exponential backoff.
+        res = client.api("batch_write_item", request_items=req_data)
+        ret["responses"].append(res)
+    echo(json_dumps(ret))

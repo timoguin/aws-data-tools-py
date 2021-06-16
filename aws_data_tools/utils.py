@@ -1,4 +1,9 @@
+"""
+Utilities for common operations that happen across different services
+"""
 from typing import Dict, List
+
+from boto3.dynamodb.types import TypeSerializer
 
 from .client import APIClient
 
@@ -14,3 +19,40 @@ def query_tags(client: APIClient, resource_id: str) -> Dict[str, str]:
     if len(tags) == 0:
         return {}
     return tag_list_to_dict(tags)
+
+
+def dict_to_dynamodb_item(raw):
+    """Convert a dict to a DynamoDB Item"""
+    serializer = TypeSerializer()
+    return {key: serializer.serialize(value) for key, value in raw.items()}
+    # if isinstance(raw, dict):
+    #     return {
+    #         "M": {
+    #             key: dict_to_dynamodb_item(value)
+    #             for key, value in raw.items()
+    #         }
+    #     }
+    # elif isinstance(raw, list):
+    #     return {
+    #         "L": [dict_to_dynamodb_item(value) for value in raw]
+    #     }
+    # elif isinstance(raw, str):
+    #     return {
+    #         "S": raw
+    #     }
+    # elif isinstance(raw, bool):
+    #     return {
+    #         "BOOL": raw
+    #     }
+    # elif isinstance(raw, (int, float)):
+    #     return {
+    #         "N": str(raw)
+    #     }
+    # elif isinstance(raw, bytes):
+    #     return {
+    #         "B": raw
+    #     }
+    # elif raw is None:
+    #     return {
+    #         "NULL": True
+    #     }
