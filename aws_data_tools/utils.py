@@ -41,3 +41,13 @@ def deserialize_dynamodb_item(item: Dict[str, Any]) -> Dict[str, Any]:
 def deserialize_dynamodb_items(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Convert a list of DynamoDB Items to a list of dicts"""
     return [deserialize_dynamodb_item(item) for item in items]
+
+
+def prepare_dynamodb_batch_put_request(
+    table: str,
+    items: List[Dict[str, Any]],
+) -> Dict[str, List[Dict[str, Any]]]:
+    """Prepare PutRequest input for a DynamoDB BatchWriteItem request"""
+    return {
+        table: [{"PutRequest": {"Item": item}} for item in items if item is not None]
+    }

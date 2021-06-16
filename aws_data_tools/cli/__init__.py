@@ -26,7 +26,11 @@ from .. import get_version
 from ..client import APIClient
 from ..builders.organizations import OrganizationDataBuilder
 from ..models.organizations import Account
-from ..utils import deserialize_dynamodb_items, serialize_dynamodb_items
+
+from ..utils import (
+    deserialize_dynamodb_items,
+    prepare_dynamodb_batch_put_request,
+)
 
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
@@ -107,9 +111,9 @@ def dump_json(
             kwargs["init_policy_targets"] = False
         odb = OrganizationDataBuilder(include_account_parents=True, **kwargs)
         if format_ == "JSON":
-            s_func = odb.as_json
+            s_func = odb.to_json
         elif format_ == "YAML":
-            s_func = odb.as_yaml
+            s_func = odb.to_yaml
         if out_file is None:
             out_file = "-"
         with open_file(out_file, mode="wb") as f:
@@ -200,7 +204,7 @@ def lookup_accounts(
         odb.fetch_account_tags(account_ids=account_ids)
 
     data = [
-        {k: v for k, v in acct.as_dict().items() if k not in exclude_keys}
+        {k: v for k, v in acct.to_dict().items() if k not in exclude_keys}
         for acct in odb.dm.accounts
         if acct.id in account_ids
     ]
@@ -219,17 +223,22 @@ def write_accounts_to_dynamodb(
     in_file: str,
 ) -> None:
     """Write a list of accounts to a DynamoDB table"""
-    client = APIClient("dynamodb")
     data = None
     with open_file(in_file, mode="r") as f:
         data = json_load(f)
+    odb = OrganizationDataBuilder()
+    if not isinstance(data, list):
+        handle_error(err_msg="Data is not a list")
+    odb.dm.accounts = [Account(**account) for account in data]
+    accounts = odb.to_dynamodb(field_name="accounts")
+    client = APIClient("dynamodb")
     ret = {"responses": []}
-    for group_ in zip_longest(*[iter(data)] * 25):
-        accounts = serialize_dynamodb_items(group_)
-        req_data = {table: [{"PutRequest": {"Item": account}} for account in accounts]}
+    # Group into batches of 25 since that's the max for BatchWriteItem
+    for group_ in zip_longest(*[iter(accounts)] * 25):
+        items = prepare_dynamodb_batch_put_request(table=table, items=group_)
+        res = client.api("batch_write_item", request_items=items)
         # TODO: Add handling of any "UnprocessedItems" in the response. Add retry with
         # exponential backoff.
-        res = client.api("batch_write_item", request_items=req_data)
         ret["responses"].append(res)
     echo(json_dumps(ret))
 
@@ -247,4 +256,4 @@ def read_accounts_from_dynamodb(
     accounts = [Account(**account) for account in deserialize_dynamodb_items(res)]
     odb = OrganizationDataBuilder()
     odb.dm.accounts = accounts
-    echo(odb.as_json(field_name="accounts"))
+    echo(odb.to_json(field_name="accounts"))
