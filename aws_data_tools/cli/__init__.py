@@ -25,7 +25,8 @@ from click import (
 from .. import get_version
 from ..client import APIClient
 from ..builders.organizations import OrganizationDataBuilder
-from ..utils import dict_to_dynamodb_item
+from ..models.organizations import Account
+from ..utils import deserialize_dynamodb_items, serialize_dynamodb_items
 
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
@@ -224,12 +225,26 @@ def write_accounts_to_dynamodb(
         data = json_load(f)
     ret = {"responses": []}
     for group_ in zip_longest(*[iter(data)] * 25):
-        accounts = [
-            dict_to_dynamodb_item(account) for account in group_ if account is not None
-        ]
+        accounts = serialize_dynamodb_items(group_)
         req_data = {table: [{"PutRequest": {"Item": account}} for account in accounts]}
         # TODO: Add handling of any "UnprocessedItems" in the response. Add retry with
         # exponential backoff.
         res = client.api("batch_write_item", request_items=req_data)
         ret["responses"].append(res)
     echo(json_dumps(ret))
+
+
+@organization.command()
+@option("--table", "-t", required=True, help="Name of the DynamoDB table")
+@pass_context
+def read_accounts_from_dynamodb(
+    ctx: Dict[str, Any],
+    table: str,
+) -> None:
+    """Fetch a list of accounts from a DynamoDB table"""
+    client = APIClient("dynamodb")
+    res = client.api("scan", table_name=table)
+    accounts = [Account(**account) for account in deserialize_dynamodb_items(res)]
+    odb = OrganizationDataBuilder()
+    odb.dm.accounts = accounts
+    echo(odb.as_json(field_name="accounts"))

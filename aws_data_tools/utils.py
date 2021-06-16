@@ -1,9 +1,9 @@
 """
 Utilities for common operations that happen across different services
 """
-from typing import Dict, List
+from typing import Any, Dict, List
 
-from boto3.dynamodb.types import TypeSerializer
+from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 
 from .client import APIClient
 
@@ -21,38 +21,23 @@ def query_tags(client: APIClient, resource_id: str) -> Dict[str, str]:
     return tag_list_to_dict(tags)
 
 
-def dict_to_dynamodb_item(raw):
+def serialize_dynamodb_item(item: Dict[str, Any]) -> Dict[str, Any]:
     """Convert a dict to a DynamoDB Item"""
     serializer = TypeSerializer()
-    return {key: serializer.serialize(value) for key, value in raw.items()}
-    # if isinstance(raw, dict):
-    #     return {
-    #         "M": {
-    #             key: dict_to_dynamodb_item(value)
-    #             for key, value in raw.items()
-    #         }
-    #     }
-    # elif isinstance(raw, list):
-    #     return {
-    #         "L": [dict_to_dynamodb_item(value) for value in raw]
-    #     }
-    # elif isinstance(raw, str):
-    #     return {
-    #         "S": raw
-    #     }
-    # elif isinstance(raw, bool):
-    #     return {
-    #         "BOOL": raw
-    #     }
-    # elif isinstance(raw, (int, float)):
-    #     return {
-    #         "N": str(raw)
-    #     }
-    # elif isinstance(raw, bytes):
-    #     return {
-    #         "B": raw
-    #     }
-    # elif raw is None:
-    #     return {
-    #         "NULL": True
-    #     }
+    return {key: serializer.serialize(value) for key, value in item.items()}
+
+
+def serialize_dynamodb_items(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Convert a list of dicts to a list of DynamoDB Items"""
+    return [serialize_dynamodb_item(item) for item in items]
+
+
+def deserialize_dynamodb_item(item: Dict[str, Any]) -> Dict[str, Any]:
+    """Convert a DynamoDB Item to a dict"""
+    deserializer = TypeDeserializer()
+    return {key: deserializer.deserialize(value) for key, value in item.items()}
+
+
+def deserialize_dynamodb_items(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Convert a list of DynamoDB Items to a list of dicts"""
+    return [deserialize_dynamodb_item(item) for item in items]
