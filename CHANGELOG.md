@@ -20,10 +20,21 @@ No unreleased changes.
 - Adds a `field` argument to `ModelBase.as_dict()` to dump a single field in a model
 - Adds configurations for tox and other testing tools
 - Adds a quickstart to the top of the README
+- Adds an `organizations write-accounts-to-dynamodb` CLI command
+- Adds an `organizations read-accounts-from-dynamodb` CLI command
+- Adds DynamoDB (de)serialization functions and requests helpers to utils
 
 ### Changed
 
 - Refactors `OrganizationDataBuilder` to allow more control over pulling data
+- Updates the Makefile to allow setting a custom PYTHONBREAKPOINT when debugging
+- Updates `OrganizationDataBuilder` to allow setting the client during init
+- Updates `OrganizationDataBuilder` to allow excluding account parent data lookups
+- Renames `ModelBase` serialization function prefixes from `as_` to `to_`
+- Updates `APIClient.api()` to only pascalize keys in kwargs, not the values. This
+  fixes a bug that was causing items being inserted into DynamoDB to be pascalized.
+- Updates `APIClient()` and `APIClient.Connect()` to skip creating the client if it
+  already exists
 
 ## [0.1.0-beta1] - 2020-06-09
 

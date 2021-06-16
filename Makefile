@@ -4,9 +4,10 @@ PY_INSTALL_ARGS ?=--extras="cli devtools docs"
 VENV_DIR ?=.venv
 CMD ?=/bin/bash
 DEBUG ?=false
+PYTHONBREAKPOINT ?=ipdb.set_trace
 
 ifeq (${DEBUG},true)
-	export PYTHONBREAKPOINT=ipdb.set_trace
+	export PYTHONBREAKPOINT
 else
 	export PYTHONBREAKPOINT=0
 endif

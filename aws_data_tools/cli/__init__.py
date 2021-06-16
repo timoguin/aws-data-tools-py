@@ -2,10 +2,12 @@
 CLI interface for working with data from AWS APIs
 """
 
+from itertools import zip_longest
 from json import dumps as json_dumps
+from json import load as json_load
 from re import fullmatch
 from traceback import format_exc
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 from botocore.exceptions import ClientError, NoCredentialsError
 
@@ -21,7 +23,14 @@ from click import (
 )
 
 from .. import get_version
+from ..client import APIClient
 from ..builders.organizations import OrganizationDataBuilder
+from ..models.organizations import Account
+
+from ..utils import (
+    deserialize_dynamodb_items,
+    prepare_dynamodb_batch_put_request,
+)
 
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
@@ -54,7 +63,7 @@ def handle_error(ctx, err_msg, tb=None):
         ctx.exit(1)
 
 
-@organization.command()
+@organization.command(short_help="Dump org data as JSON")
 @option(
     "--no-accounts",
     default=False,
@@ -83,7 +92,7 @@ def dump_json(
     no_policies: bool,
     format_: str,
     out_file: str,
-) -> Union[str, None]:
+) -> None:
     """Dump a JSON representation of the organization"""
     err_msg = None
     tb = None
@@ -100,11 +109,11 @@ def dump_json(
             kwargs["init_policies"] = False
             kwargs["init_policy_tags"] = False
             kwargs["init_policy_targets"] = False
-        odb = OrganizationDataBuilder(**kwargs)
+        odb = OrganizationDataBuilder(include_account_parents=True, **kwargs)
         if format_ == "JSON":
-            s_func = odb.as_json
+            s_func = odb.to_json
         elif format_ == "YAML":
-            s_func = odb.as_yaml
+            s_func = odb.to_yaml
         if out_file is None:
             out_file = "-"
         with open_file(out_file, mode="wb") as f:
@@ -153,7 +162,7 @@ def lookup_accounts(
     include_effective_policies: bool,
     include_policies: bool,
     include_tags: bool,
-) -> str:
+) -> None:
     """Query for account details using a list of account IDs"""
     accounts_unvalidated = []
     if " " in accounts:
@@ -195,8 +204,56 @@ def lookup_accounts(
         odb.fetch_account_tags(account_ids=account_ids)
 
     data = [
-        {k: v for k, v in acct.as_dict().items() if k not in exclude_keys}
+        {k: v for k, v in acct.to_dict().items() if k not in exclude_keys}
         for acct in odb.dm.accounts
         if acct.id in account_ids
     ]
     echo(json_dumps(data, default=str))
+
+
+@organization.command()
+@option("--table", "-t", required=True, help="Name of the DynamoDB table")
+@option(
+    "--in-file", "-i", required=True, help="File containing a list of Account objects"
+)
+@pass_context
+def write_accounts_to_dynamodb(
+    ctx: Dict[str, Any],
+    table: str,
+    in_file: str,
+) -> None:
+    """Write a list of accounts to a DynamoDB table"""
+    data = None
+    with open_file(in_file, mode="r") as f:
+        data = json_load(f)
+    odb = OrganizationDataBuilder()
+    if not isinstance(data, list):
+        handle_error(err_msg="Data is not a list")
+    odb.dm.accounts = [Account(**account) for account in data]
+    accounts = odb.to_dynamodb(field_name="accounts")
+    client = APIClient("dynamodb")
+    ret = {"responses": []}
+    # Group into batches of 25 since that's the max for BatchWriteItem
+    for group_ in zip_longest(*[iter(accounts)] * 25):
+        items = prepare_dynamodb_batch_put_request(table=table, items=group_)
+        res = client.api("batch_write_item", request_items=items)
+        # TODO: Add handling of any "UnprocessedItems" in the response. Add retry with
+        # exponential backoff.
+        ret["responses"].append(res)
+    echo(json_dumps(ret))
+
+
+@organization.command()
+@option("--table", "-t", required=True, help="Name of the DynamoDB table")
+@pass_context
+def read_accounts_from_dynamodb(
+    ctx: Dict[str, Any],
+    table: str,
+) -> None:
+    """Fetch a list of accounts from a DynamoDB table"""
+    client = APIClient("dynamodb")
+    res = client.api("scan", table_name=table)
+    accounts = [Account(**account) for account in deserialize_dynamodb_items(res)]
+    odb = OrganizationDataBuilder()
+    odb.dm.accounts = accounts
+    echo(odb.to_json(field_name="accounts"))
