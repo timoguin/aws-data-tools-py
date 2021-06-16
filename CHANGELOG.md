@@ -14,6 +14,16 @@ the unreleased section to the section for the new release.
 
 No unreleased changes.
 
+### Added
+
+- Adds support for generating a Graphviz diagram of an Organization with the new
+  `OrganizationDataBuilder.to_dot()` function
+- Adds `DOT` as a supported output format for the `organization dump-all` command
+
+### Changed
+
+- breaking: Renames `organization dump-json` CLI command to `organization dump-all`
+
 ## [0.1.0-beta2] - 2021-06-16
 
 ### Added
