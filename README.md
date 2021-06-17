@@ -5,6 +5,9 @@ from various AWS APIs, as well as a CLI interface.
 
 This is in early development.
 
+[![PyPI version](https://badge.fury.io/py/aws-data-tools.svg)](https://badge.fury.io/py/aws-data-tools)
+![Build](https://github.com/timoguin/aws-data-tools/actions/workflows/main.yml/badge.svg)
+
 ## Installation
 
 Using pip should work on any system with at least Python 3.9:
