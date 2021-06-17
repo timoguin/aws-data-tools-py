@@ -1,12 +1,14 @@
 # AWS Data Tools
 
-An set of opinioned (but flexible) Python libraries for querying and transforming data
+<!-- Badges -->
+[![Actions Status][gh-actions-badge]][gh-actions-link]
+[![PyPI][pypi-badge]][pypi-link]
+[![License][license-badge]][license-link]
+
+A set of opinioned (but flexible) Python libraries for querying and transforming data
 from various AWS APIs, as well as a CLI interface.
 
 This is in early development.
-
-[![PyPI version](https://badge.fury.io/py/aws-data-tools.svg)](https://badge.fury.io/py/aws-data-tools)
-![Build](https://github.com/timoguin/aws-data-tools/actions/workflows/main.yml/badge.svg)
 
 ## Installation
 
@@ -269,3 +271,12 @@ References:
 ## Contributing
 
 View the [Contributing Guide](.github/CONTRIBUTING.md) to learn about giving back.
+
+
+<!-- Markown anchors -->
+[gh-actions-badge]: https://github.com/timoguin/aws-data-tools-py/actions/workflows/ci.yml/badge.svg
+[gh-actions-link]: https://github.com/timoguin/aws-data-tools-py/actions
+[license-badge]: https://img.shields.io/github/license/timoguin/aws-data-tools-py.svg
+[license-link]: https://github.com/timoguin/aws-data-tools-py/blob/main/LICENSE
+[pypi-badge]: https://badge.fury.io/py/aws-data-tools.svg
+[pypi-link]: https://pypi.python.org/pypi/aws-data-tools
