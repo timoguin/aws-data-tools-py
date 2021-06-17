@@ -11,7 +11,7 @@ repository = "https://github.com/timoguin/aws-data-tools-py"
 documentation = "https://timoguin.github.io/aws-data-tools-py"
 keywords = ["aws", "etl", "library"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
