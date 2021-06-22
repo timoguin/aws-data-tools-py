@@ -18,7 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-exclude = ["tests"]
+exclude = ["conftest.py", "fixtures", "tests"]
 include = ["CHANGELOG.md"]
 
 [tool.poetry.urls]
@@ -30,41 +30,44 @@ Tracker = "https://github.com/timoguin/aws-data-tools-py/issues"
 [tool.poetry.dependencies]
 python = ">=3.9,<4"
 boto3 = "^1.17.80"
+graphviz = "^0.16"
 pyhumps = "^3.0.2"
 PyYAML = "^5.4.1"
 structlog = "^21.1.0"
 
 # Optional extras: cli
-click = {version = "^8.0.1", optional = true, extras = ["cli"]}
+click = {version = "^8.0.1", optional = true, extras=["cli"]}
+click-completion = {version = "^0.5.2", optional = true, extras=["cli"]}
 
 # Optional extras: devtools
-ipdb = {version = "^0.13.8", optional = true, extras=["devtools"]}
-notebook = {version = "^6.4.0", optional = true, extras = ["devtools"]}
-pre-commit = {version = "^2.13.0", optional = true, extras = ["devtools"]}
+ipdb = {version = "^0.13.8", optional = true}
+notebook = {version = "^6.4.0", optional = true}
+pre-commit = {version = "^2.13.0", optional = true}
 
 # Optional extras: docs
-blacken-docs = {version = "^1.10.0", optional = true, extras = ["docs"]}
-mkdocs = {version = "^1.1.2", optional = true, extras = ["docs"]}
-mkdocs-git-revision-date-localized-plugin = {version = "^0.9.2", optional = true, extras = ["docs"]}
-mkdocs-macros-plugin = {version = "^0.5.5", optional = true, extras = ["docs"]}
-mkdocs-material = {version = "^7.1.5", optional = true, extras = ["docs"]}
-graphviz = "^0.16"
+blacken-docs = {version = "^1.10.0", optional = true}
+mkdocs = {version = "^1.1.2", optional = true}
+mkdocs-git-revision-date-localized-plugin = {version = "^0.9.2", optional = true}
+mkdocs-macros-plugin = {version = "^0.5.5", optional = true}
+mkdocs-material = {version = "^7.1.5", optional = true}
 
 [tool.poetry.dev-dependencies]
 black = "^21.5b1"
+coverage = "^5.5"
 flakehell = "^0.9.0"
 isort = "^5.8.0"
-pylint = "^2.8.3"
-pytest = "^6.2.4"
-tox-poetry = "^0.4.0"
+mccabe = "^0.6.1"
 moto = "^2.0.9"
 pycodestyle = "^2.7.0"
 pyflakes = "^2.3.1"
-mccabe = "^0.6.1"
+pylint = "^2.8.3"
+pytest = "^6.2.4"
+pytest-cov = "^2.12.1"
 pytest-custom-exit-code = "^0.3.0"
+tox-poetry = "^0.4.0"
 
 [tool.poetry.extras]
-cli = ["click"]
+cli = ["click", "click-completion"]
 devtools = [
     "ipdb",
     "notebook",
@@ -110,3 +113,25 @@ mccabe = ["+*"]
 pycodestyle = ["+*"]
 pyflakes = ["+*"]
 pylint = ["+*"]
+
+[tool.coverage.run]
+source = ["aws_data_tools"]
+omit = [
+    "*test*",
+    "**/__init__.py",
+    "client/__init__.py",
+    "models/__init__.py",
+    "utils/__init__.py"
+]
+
+[tool.coverage.report]
+omit = [
+    "*test*",
+    "__init__.py",
+    "client/__init__.py",
+    "models/__init__.py",
+    "utils/__init__.py"
+]
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"

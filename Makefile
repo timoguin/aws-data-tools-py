@@ -72,7 +72,7 @@ build: ${VENV_DIR}
 .PHONY: test ## Run the test suite
 test: ${VENV_DIR}
 	@echo "Running test suite"
-	@poetry run pytest --suppress-no-test-exit-code
+	@poetry run pytest --cov ${OPTS} ${ARGS}
 
 # Ensures the Python venv exists and has dependencies installed
 ${VENV_DIR}:

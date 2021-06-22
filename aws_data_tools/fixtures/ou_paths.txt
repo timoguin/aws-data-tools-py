@@ -1,0 +1,36 @@
+/GrumpySysadmins
+/GrumpySysadmins/Services
+/GrumpySysadmins/Services/Corp Fileshares
+/GrumpySysadmins/Services/Corp Fileshares/Prod
+/GrumpySysadmins/Services/Corp Fileshares/Test
+/GrumpySysadmins/Services/Jira
+/GrumpySysadmins/Services/Jira/Prod
+/GrumpySysadmins/Services/Jira/Test
+/GrumpySysadmins/Services/LegacyApp
+/GrumpySysadmins/Services/LegacyApp/Prod
+/Large BU
+/Large BU/Logging
+/Large BU/Logging/Dev
+/Large BU/Logging/Prod
+/Large BU/Logging/QA
+/Large BU/Logging/Staging
+/Large BU/Website
+/Large BU/Website/Backend
+/Large BU/Website/Backend/Dev
+/Large BU/Website/Backend/Prod
+/Large BU/Website/Frontend
+/Large BU/Website/Frontend/Dev
+/Large BU/Website/Frontend/Prod
+/Large BU/Website/Frontend/QA
+/Oracle Admins
+/Oracle Admins/dev
+/Oracle Admins/prd
+/Oracle Admins/prdtst
+/Super Cool BU
+/Super Cool BU/Groundbreaking Service
+/Super Cool BU/Groundbreaking Service/Dev
+/Super Cool BU/Groundbreaking Service/Prod
+/Super Cool BU/Testing
+/YOLO BU
+/YOLO BU/YOLO Service
+/YOLO BU/YOLO Service/Production

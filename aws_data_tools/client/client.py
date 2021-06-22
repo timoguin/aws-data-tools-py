@@ -2,7 +2,7 @@
 Module containing classes that abstract interactions with boto3 sessions and clients
 """
 
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from typing import Any, Dict, List, Union
 
 from boto3.session import Session
@@ -22,7 +22,11 @@ class APIClient:
 
     service: str
     client: BaseClient = field(default=None)
-    session: Session = field(default_factory=Session)
+    session: Session = field(default=None)
+
+    # Allow customizing the session
+    client_kwargs: InitVar[Dict[str, Any]] = field(default=None)
+    session_kwargs: InitVar[Dict[str, Any]] = field(default=None)
 
     def api(self, func: str, **kwargs) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """
@@ -51,6 +55,12 @@ class APIClient:
         response = getattr(self.client, func)(**kwargs)
         return depascalize(response)
 
-    def __post_init__(self):
+    def __post_init__(self, client_kwargs, session_kwargs):  # pragma: no cover
+        if client_kwargs is None:
+            client_kwargs = {}
+        if session_kwargs is None:
+            session_kwargs = {}
+        if self.session is None:
+            self.session = Session(**session_kwargs)
         if self.client is None:
-            self.client = self.session.client(self.service)
+            self.client = self.session.client(self.service, **client_kwargs)

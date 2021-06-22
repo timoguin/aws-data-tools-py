@@ -1,7 +1,0 @@
-version: "3.9"
-
-services:
-  motoserver:
-    container_name: adt_motoserver
-    image: ${IMAGE_NAME-motoserver/moto}:${IMAGE_TAG-2.0.5}
-    ports: ["5000:5000"]
