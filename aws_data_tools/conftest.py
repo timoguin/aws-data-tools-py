@@ -97,6 +97,6 @@ def account_paths():
 
 
 @pytest.fixture(scope="session")
-def organization_data_builder(apiclient):
+def organization_data_builder(apiclient, aws_credentials):
     """Instance of an OrganizationDataBuilder with mocked Organizations APIClient"""
     return OrganizationDataBuilder(client=apiclient)

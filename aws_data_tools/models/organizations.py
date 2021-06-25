@@ -288,6 +288,19 @@ class OrganizationDataBuilder(ModelBase):
 
     include_account_parents: bool = field(default=False)
 
+    @property
+    def enabled_policy_types(self) -> List[PolicyTypeSummary]:
+        """Enabled policy types in the organization"""
+        # Add together the policy types list on the organization and the root, as there
+        # can be discrepancies between the two. Specifically, you can enable policy
+        # types on a root that do not reflect in the available policy types for the
+        # organization, so DescribeOrganization and ListRoots will answer differently.
+        if self.dm is None:
+            self.fetch_organization()
+        if self.dm.root is None:
+            self.fetch_root()
+        return self.dm.available_policy_types + self.dm.root.policy_types
+
     def Connect(self):
         """Initialize an authenticated session"""
         if self.client is None:
@@ -371,7 +384,7 @@ class OrganizationDataBuilder(ModelBase):
     def __e_policies(self) -> List[Dict[str, Any]]:
         """Extract organization policy data from ListPolicies and DescribePolicy"""
         ret = []
-        for p in self.dm.available_policy_types:
+        for p in self.policy_types:
             policies = []
             p_summaries = self.api("list_policies", filter=p.type)
             for p_summary in p_summaries:
@@ -602,7 +615,7 @@ class OrganizationDataBuilder(ModelBase):
     ) -> List[EffectivePolicy]:
         """Extract a list of effective policies for a target node"""
         effective_policies = []
-        for p in self.dm.available_policy_types:
+        for p in self.policy_types:
             # SCPs aren't supported for effective policies
             if p.type == "SERVICE_CONTROL_POLICY":
                 continue

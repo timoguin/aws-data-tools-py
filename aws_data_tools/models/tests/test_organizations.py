@@ -1,5 +1,4 @@
 # flake8: noqa: F401
-from moto import mock_organizations
 import pytest
 
 
@@ -174,17 +173,14 @@ class TestOrganization:
         assert True is True
 
 
-@mock_organizations
 class TestOrganizationDataBuilder:
     """Test the OrganizationDataBuilder class"""
 
     @pytest.fixture()
-    @mock_organizations
-    def odb(self, aws_credentials):
-        return OrganizationDataBuilder()
+    def odb(self, aws_credentials, organization_data_builder):
+        return organization_data_builder
 
     @pytest.fixture()
-    @mock_organizations
     def org(self, aws_credentials, odb):
         org = Organization(
             **odb.api("create_organization", feature_set="ALL").get("organization"),
@@ -205,7 +201,6 @@ class TestOrganizationDataBuilder:
         assert odb.dm == org
 
     def test_fetch_root(self, aws_credentials, odb, org):
-        odb.fetch_organization()
         odb.fetch_root()
         assert isinstance(odb.dm.root, Root)
         assert odb.dm.root == org.root
