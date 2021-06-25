@@ -1,5 +1,4 @@
 import os
-from typing import Dict, List
 
 import pytest
 from moto import mock_organizations
@@ -46,7 +45,7 @@ def apiclient(
     )
 
 
-def paths_to_tree(paths: List[str]) -> Dict[str, Dict[str, str]]:
+def paths_to_tree(paths: list[str]) -> dict[str, dict[str, str]]:
     """Convert a list of paths into a tree"""
     if paths is None:
         paths = []
@@ -76,7 +75,7 @@ def paths_to_tree(paths: List[str]) -> Dict[str, Dict[str, str]]:
     return path_tree
 
 
-def pathfile_to_tree(filepath: str) -> Dict[str, Dict[str, str]]:
+def pathfile_to_tree(filepath: str) -> dict[str, dict[str, str]]:
     """Read a file that's a list of paths and generate a tree"""
     paths = None
     with open(filepath, "rb") as f:

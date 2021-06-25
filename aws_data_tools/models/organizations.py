@@ -3,7 +3,7 @@ Dataclass builders and models for working with AWS Organizations APIs
 """
 
 from dataclasses import dataclass, field, InitVar
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 import graphviz
 
@@ -124,8 +124,8 @@ class Policy(ModelBase):
     content: str = field(default=None)
 
     # Optional properties generally populated after initialization
-    tags: Dict[str, str] = field(default=None)
-    targets: List[PolicyTargetSummary] = field(default=None)
+    tags: dict[str, str] = field(default=None)
+    targets: list[PolicyTargetSummary] = field(default=None)
 
     def to_target(self):
         """Return the Policy as a PolicySummaryForTarget object"""
@@ -141,13 +141,13 @@ class Root(ModelBase):
     arn: str
     id: str
     name: str
-    policy_types: List[PolicyTypeSummary]
+    policy_types: list[PolicyTypeSummary]
 
     # Optional properties generally populated after initialization
-    children: List[ParChild] = field(default=None)
-    policies: List[PolicySummaryForTarget] = field(default=None)
+    children: list[ParChild] = field(default=None)
+    policies: list[PolicySummaryForTarget] = field(default=None)
 
-    def to_parchild_dict(self) -> Dict[str, str]:
+    def to_parchild_dict(self) -> dict[str, str]:
         """Return the root as a ParChild (parent) dict"""
         return {"id": self.id, "type": "ROOT"}
 
@@ -165,12 +165,12 @@ class OrganizationalUnit(ModelBase):
     name: str
 
     # Optional properties generally populated after initialization
-    children: List[ParChild] = field(default=None)
+    children: list[ParChild] = field(default=None)
     parent: ParChild = field(default=None)
-    policies: List[PolicySummaryForTarget] = field(default=None)
-    tags: Dict[str, str] = field(default=None)
+    policies: list[PolicySummaryForTarget] = field(default=None)
+    tags: dict[str, str] = field(default=None)
 
-    def to_parchild_dict(self) -> Dict[str, str]:
+    def to_parchild_dict(self) -> dict[str, str]:
         """Return the OU as a ParChild (parent) dict"""
         return {"id": self.id, "type": "ORGANIZATIONAL_UNIT"}
 
@@ -192,12 +192,12 @@ class Account(ModelBase):
     status: str
 
     # Optional properties generally populated after initialization
-    effective_policies: List[EffectivePolicy] = field(default=None)
+    effective_policies: list[EffectivePolicy] = field(default=None)
     parent: ParChild = field(default=None)
-    policies: List[PolicySummaryForTarget] = field(default=None)
-    tags: Dict[str, str] = field(default=None)
+    policies: list[PolicySummaryForTarget] = field(default=None)
+    tags: dict[str, str] = field(default=None)
 
-    def to_parchild_dict(self) -> Dict[str, str]:
+    def to_parchild_dict(self) -> dict[str, str]:
         """Return the account as a ParChild (parent) dict"""
         return {"id": self.id, "type": "ACCOUNT"}
 
@@ -213,7 +213,7 @@ class Organization(ModelBase):
     # We allow all these fields to default to None so we can support initializing an
     # organization object with empty data.
     arn: str = field(default=None)
-    available_policy_types: List[PolicyTypeSummary] = field(default=None)
+    available_policy_types: list[PolicyTypeSummary] = field(default=None)
     feature_set: str = field(default=None)
     id: str = field(default=None)
     master_account_arn: str = field(default=None)
@@ -227,26 +227,26 @@ class Organization(ModelBase):
     # serializing/deserializing these collections indepently requires passing the
     # "field_name" kwarg to the `to_dict()` function from ModelBase. It's already
     # getting hacky.
-    accounts: List[Account] = field(default=None)
-    organizational_units: List[OrganizationalUnit] = field(default=None)
-    policies: List[Policy] = field(default=None)
+    accounts: list[Account] = field(default=None)
+    organizational_units: list[OrganizationalUnit] = field(default=None)
+    policies: list[Policy] = field(default=None)
     root: Root = field(default=None)
 
     # Mappings that represent node -> edge relationships in the organization
-    _parent_child_tree: Dict[str, ParChild] = field(
+    _parent_child_tree: dict[str, ParChild] = field(
         default=None, init=False, repr=False
     )
-    _child_parent_tree: Dict[str, ParChild] = field(
+    _child_parent_tree: dict[str, ParChild] = field(
         default=None, init=False, repr=False
     )
-    _policy_target_tree: Dict[str, ParChild] = field(
+    _policy_target_tree: dict[str, ParChild] = field(
         default=None, init=False, repr=False
     )
 
     # Mappings that hold a reference to the index of each node in a list
-    _account_index_map: Dict[str, int] = field(default=None, init=False, repr=False)
-    _ou_index_map: Dict[str, int] = field(default=None, init=False, repr=False)
-    _policy_index_map: Dict[str, int] = field(default=None, init=False, repr=False)
+    _account_index_map: dict[str, int] = field(default=None, init=False, repr=False)
+    _ou_index_map: dict[str, int] = field(default=None, init=False, repr=False)
+    _policy_index_map: dict[str, int] = field(default=None, init=False, repr=False)
 
 
 @dataclass
@@ -289,7 +289,7 @@ class OrganizationDataBuilder(ModelBase):
     include_account_parents: bool = field(default=False)
 
     @property
-    def enabled_policy_types(self) -> List[PolicyTypeSummary]:
+    def enabled_policy_types(self) -> list[str]:
         """Enabled policy types in the organization"""
         # Add together the policy types list on the organization and the root, as there
         # can be discrepancies between the two. Specifically, you can enable policy
@@ -306,7 +306,7 @@ class OrganizationDataBuilder(ModelBase):
         if self.client is None:
             self.client = APIClient(_SERVICE_NAME)
 
-    def api(self, func: str, **kwargs) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    def api(self, func: str, **kwargs) -> Union[list[dict[str, Any]], dict[str, Any]]:
         """Make arbitrary API calls with the session client"""
         if self.client is None:
             self.Connect()
@@ -340,11 +340,11 @@ class OrganizationDataBuilder(ModelBase):
             chain=10,
         )
 
-    def __e_organization(self) -> Dict[str, str]:
+    def __e_organization(self) -> dict[str, str]:
         """Extract org description data from the DescribeOrganization API"""
         return self.api("describe_organization").get("organization")
 
-    def __t_organization(self) -> Dict[str, Union[str, List[PolicySummary]]]:
+    def __t_organization(self) -> dict[str, Union[str, list[PolicySummary]]]:
         """Deserialize org description data and perform any transformations"""
         data = {}
         for k, v in self.__e_organization().items():
@@ -363,7 +363,7 @@ class OrganizationDataBuilder(ModelBase):
         """Initialize the organization object with minimal data"""
         self.__l_organization()
 
-    def __e_roots(self) -> List[Dict[str, Any]]:
+    def __e_roots(self) -> list[dict[str, Any]]:
         """Extract org roots from the ListRoots API"""
         return self.api("list_roots")
 
@@ -381,7 +381,7 @@ class OrganizationDataBuilder(ModelBase):
             self.fetch_organization()
         self.__l_roots()
 
-    def __e_policies(self) -> List[Dict[str, Any]]:
+    def __e_policies(self) -> list[dict[str, Any]]:
         """Extract organization policy data from ListPolicies and DescribePolicy"""
         ret = []
         for p in self.policy_types:
@@ -395,7 +395,7 @@ class OrganizationDataBuilder(ModelBase):
             ret.extend(policies)
         return ret
 
-    def __t_policies(self) -> List[Policy]:
+    def __t_policies(self) -> list[Policy]:
         """Deserialize list of policy dicts into a list of Policy objects"""
         ret = []
         for p in self.__e_policies():
@@ -416,11 +416,11 @@ class OrganizationDataBuilder(ModelBase):
         """Initialize the list of Policy objects in the organization"""
         self.__l_policies()
 
-    def __e_policy_targets_for_id(self, policy_id: str) -> List[PolicyTargetSummary]:
+    def __e_policy_targets_for_id(self, policy_id: str) -> list[PolicyTargetSummary]:
         """Extract a list of policy targets from ListTargetsForPolicy"""
         return self.api("list_targets_for_policy", policy_id=policy_id)
 
-    def __e_policy_targets(self) -> Dict[str, List[Dict[str, Any]]]:
+    def __e_policy_targets(self) -> dict[str, list[dict[str, Any]]]:
         """Extract target summary data for all policies"""
         ret = {}
         if self.dm.policies is None:
@@ -459,7 +459,7 @@ class OrganizationDataBuilder(ModelBase):
 
     def __t_policy_targets(
         self,
-    ) -> Dict[str, Dict[str, List[Union[PolicySummaryForTarget, PolicySummary]]]]:
+    ) -> dict[str, dict[str, list[Union[PolicySummaryForTarget, PolicySummary]]]]:
         """
         Deserialize policy targets into a dict of PolicySummaryForTarget and
         PolicyTargetSummary objects
@@ -513,11 +513,11 @@ class OrganizationDataBuilder(ModelBase):
 
     def __e_ous_recurse(
         self,
-        parents: List[ParChild] = None,
-        ous: List[OrganizationalUnit] = None,
+        parents: list[ParChild] = None,
+        ous: list[OrganizationalUnit] = None,
         depth: int = 0,
         maxdepth: int = _OU_MAXDEPTH,
-    ) -> List[OrganizationalUnit]:
+    ) -> list[OrganizationalUnit]:
         """Recurse the org tree and return a list of OU dicts"""
         if parents is None:
             if self.dm.root is None:
@@ -554,11 +554,11 @@ class OrganizationDataBuilder(ModelBase):
                 self.dm._child_parent_tree[account.id] = parent
         return self.__e_ous_recurse(parents=next_parents, ous=ous, depth=depth + 1)
 
-    def __e_ous(self) -> List[OrganizationalUnit]:
+    def __e_ous(self) -> list[OrganizationalUnit]:
         """Extract the OU tree recursively, including OUs and child accounts"""
         return self.__e_ous_recurse()
 
-    def __t_ous(self) -> List[OrganizationalUnit]:
+    def __t_ous(self) -> list[OrganizationalUnit]:
         """Transform OU objects by populating child relationships"""
         data = self.__e_ous()
         ous = []
@@ -581,11 +581,11 @@ class OrganizationDataBuilder(ModelBase):
         """Recurse the org tree and populate relationship data for nodes"""
         self.__l_ous()
 
-    def __e_accounts(self) -> List[Dict[str, Any]]:
+    def __e_accounts(self) -> list[dict[str, Any]]:
         """Extract the list of accounts in the org"""
         return self.api("list_accounts")
 
-    def __t_accounts(self) -> List[Account]:
+    def __t_accounts(self) -> list[Account]:
         """Transform account data into a list of Account objects"""
         return [Account(**account) for account in self.__e_accounts()]
 
@@ -612,7 +612,7 @@ class OrganizationDataBuilder(ModelBase):
 
     def __e_effective_policies_for_target(
         self, target_id: str
-    ) -> List[EffectivePolicy]:
+    ) -> list[EffectivePolicy]:
         """Extract a list of effective policies for a target node"""
         effective_policies = []
         for p in self.policy_types:
@@ -626,8 +626,8 @@ class OrganizationDataBuilder(ModelBase):
         return effective_policies
 
     def __e_effective_policies(
-        self, account_ids: List[str] = None
-    ) -> Dict[int, List[Dict[str, Any]]]:
+        self, account_ids: list[str] = None
+    ) -> dict[int, list[dict[str, Any]]]:
         """Extract the effective policies for accounts or a list of account IDs"""
         ret = {}
         if self.dm.accounts is None:
@@ -638,7 +638,7 @@ class OrganizationDataBuilder(ModelBase):
             ret[account_id] = self.__e_effective_policies_for_target(account_id)
         return ret
 
-    def __t_effective_policies(self, **kwargs) -> Dict[int, List[EffectivePolicy]]:
+    def __t_effective_policies(self, **kwargs) -> dict[int, list[EffectivePolicy]]:
         """Transform effective policy data into a list of EffectivePolicy"""
         return [EffectivePolicy(**d) for d in self.__e_effective_policies()]
 
@@ -652,14 +652,14 @@ class OrganizationDataBuilder(ModelBase):
         """Initialize effective policy data for accounts in the org"""
         self.__l_effective_policies(**kwargs)
 
-    def __et_tags(self, resource_ids: List[str]) -> Dict[str, Dict[str, str]]:
+    def __et_tags(self, resource_ids: list[str]) -> dict[str, dict[str, str]]:
         """Extract and transform tags for a list of resource IDs"""
         ret = {}
         for resource_id in resource_ids:
             ret[resource_id] = query_tags(self.client, resource_id)
         return ret
 
-    def __l_account_tags(self, account_ids: List[str] = None, **kwargs) -> None:
+    def __l_account_tags(self, account_ids: list[str] = None, **kwargs) -> None:
         """Load tags for accounts in the organization"""
         if self.dm.accounts is None:
             self.fetch_accounts()
@@ -674,7 +674,7 @@ class OrganizationDataBuilder(ModelBase):
         """Initialize tags for accounts in the organization"""
         self.__l_account_tags(**kwargs)
 
-    def __l_ou_tags(self, ou_ids: List[str] = None) -> None:
+    def __l_ou_tags(self, ou_ids: list[str] = None) -> None:
         """Load tags for OUs in the organization"""
         if self.dm.organizational_units is None:
             self.fetch_organizational_units()
@@ -700,7 +700,7 @@ class OrganizationDataBuilder(ModelBase):
         """Initialize tags for the organization root"""
         self.__l_root_tags()
 
-    def __l_policy_tags(self, policy_ids: List[str] = None) -> None:
+    def __l_policy_tags(self, policy_ids: list[str] = None) -> None:
         """Load tags for policies in the organization"""
         if self.dm.policies is None:
             self.fetch_policies()
@@ -726,11 +726,11 @@ class OrganizationDataBuilder(ModelBase):
         self.fetch_ou_tags()
         self.fetch_account_tags()
 
-    def to_dict(self, **kwargs) -> Dict[str, Any]:
+    def to_dict(self, **kwargs) -> dict[str, Any]:
         """Return the data model for the organization as a dictionary"""
         return self.dm.to_dict(**kwargs)
 
-    def to_dynamodb(self, **kwargs) -> Dict[str, Any]:
+    def to_dynamodb(self, **kwargs) -> dict[str, Any]:
         """Return the data model for the organization as a DynamoDB Item"""
         return self.dm.to_dynamodb(**kwargs)
 

@@ -3,7 +3,7 @@ Module containing classes that abstract interactions with boto3 sessions and cli
 """
 
 from dataclasses import InitVar, dataclass, field
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 from boto3.session import Session
 from botocore.client import BaseClient
@@ -25,10 +25,10 @@ class APIClient:
     session: Session = field(default=None)
 
     # Allow customizing the session
-    client_kwargs: InitVar[Dict[str, Any]] = field(default=None)
-    session_kwargs: InitVar[Dict[str, Any]] = field(default=None)
+    client_kwargs: InitVar[dict[str, Any]] = field(default=None)
+    session_kwargs: InitVar[dict[str, Any]] = field(default=None)
 
-    def api(self, func: str, **kwargs) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+    def api(self, func: str, **kwargs) -> Union[dict[str, Any], list[dict[str, Any]]]:
         """
         Call a named API action by string. All arguments to the action should be passed
         as kwargs. The returned data has keys normalized to snake_case. Similarly, all

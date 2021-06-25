@@ -7,7 +7,7 @@ import json
 import os
 import re
 import traceback
-from typing import Any, Dict, List
+from typing import Any
 
 from botocore.exceptions import ClientError, NoCredentialsError
 
@@ -153,7 +153,7 @@ def handle_error(ctx, err_msg, tb=None):
 )
 @click.pass_context
 def dump_all(
-    ctx: Dict[str, Any],
+    ctx: dict[str, Any],
     format_: str,
     no_accounts: bool,
     no_policies: bool,
@@ -227,8 +227,8 @@ def dump_all(
 )
 @click.pass_context
 def lookup_accounts(
-    ctx: Dict[str, Any],
-    accounts: List[str],
+    ctx: dict[str, Any],
+    accounts: list[str],
     include_parents: bool,
     include_effective_policies: bool,
     include_policies: bool,
@@ -289,7 +289,7 @@ def lookup_accounts(
 )
 @click.pass_context
 def write_accounts_to_dynamodb(
-    ctx: Dict[str, Any],
+    ctx: dict[str, Any],
     table: str,
     in_file: str,
 ) -> None:
@@ -318,7 +318,7 @@ def write_accounts_to_dynamodb(
 @click.option("--table", "-t", required=True, help="Name of the DynamoDB table")
 @click.pass_context
 def read_accounts_from_dynamodb(
-    ctx: Dict[str, Any],
+    ctx: dict[str, Any],
     table: str,
 ) -> None:
     """Fetch a list of accounts from a DynamoDB table"""

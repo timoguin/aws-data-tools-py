@@ -5,7 +5,7 @@ Base classes for data models
 from collections.abc import MutableMapping
 from dataclasses import asdict, dataclass
 import json
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 import yaml
 
@@ -16,7 +16,7 @@ from ..utils import serialize_dynamodb_item, serialize_dynamodb_items
 class ModelBase:
     """Base class for all models with helpers for serialization"""
 
-    def _flatten_dict(self, d: Dict[str, str], parent_key: str = "", sep: str = "_"):
+    def _flatten_dict(self, d: dict[str, str], parent_key: str = "", sep: str = "_"):
         """Convert nested dict into a flattened one with key separators"""
         items = []
         for k, v in d.items():
@@ -27,7 +27,7 @@ class ModelBase:
                 items.append((new_key, v))
         return dict(items)
 
-    def _flatten_dicts(self, data: List[Dict[str, str]]):
+    def _flatten_dicts(self, data: list[dict[str, str]]):
         """Flatten an iterable of dicts"""
         items = []
         for item in data:
@@ -37,8 +37,8 @@ class ModelBase:
         return items
 
     def _conditional_flatten(
-        self, data: Union[Dict[str, str], List[Dict[str, str]]], flatten: bool = False
-    ) -> Union[Dict[str, str], List[Dict[str, str]]]:
+        self, data: Union[dict[str, str], list[dict[str, str]]], flatten: bool = False
+    ) -> Union[dict[str, str], list[dict[str, str]]]:
         """Flatten a dict or a list of dicts if flatten is True"""
         if not flatten:
             return data
@@ -49,7 +49,7 @@ class ModelBase:
 
     def to_dict(
         self, field_name: str = None, flatten: bool = False
-    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:  # pragma: no cover
+    ) -> Union[dict[str, Any], list[dict[str, Any]]]:  # pragma: no cover
         """
         Serialize the dataclass instance to a dict, or serialize a single field. If the
         field is a collection, it is returned as such. If the field is a simple type,
@@ -66,7 +66,7 @@ class ModelBase:
 
     def to_dynamodb(
         self, **kwargs
-    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:  # pragma: no cover
+    ) -> Union[dict[str, Any], list[dict[str, Any]]]:  # pragma: no cover
         """Serialize the dataclass or field to a DynamoDB Item or list of Items"""
         data = self.to_dict(**kwargs)
         if isinstance(data, list):
