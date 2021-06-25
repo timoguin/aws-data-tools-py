@@ -22,7 +22,7 @@ def apiclient_session_kwargs():
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def aws_credentials():
     os.environ["AWS_ACCESS_KEY_ID"] = "testing"
     os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
