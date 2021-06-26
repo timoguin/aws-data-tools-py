@@ -291,15 +291,20 @@ class OrganizationDataBuilder(ModelBase):
     @property
     def enabled_policy_types(self) -> list[str]:
         """Enabled policy types in the organization"""
-        # Add together the policy types list on the organization and the root, as there
-        # can be discrepancies between the two. Specifically, you can enable policy
-        # types on a root that do not reflect in the available policy types for the
-        # organization, so DescribeOrganization and ListRoots will answer differently.
+        # TODO (@timoguin): Follow up on AWS support request seeking clarification on
+        # discrepancies between available policy types between Org and Root.
+        #
+        # Apparently, you can enable policy types on a root that do not reflect in the
+        # available policy types for the organization, so DescribeOrganization and
+        # ListRoots will answer differently.
+        #
+        # Pendind clarifications, just return a list of policy types that are enabled
+        # on the root.
         if self.dm is None:
             self.fetch_organization()
         if self.dm.root is None:
             self.fetch_root()
-        return self.dm.available_policy_types + self.dm.root.policy_types
+        return [p.type for p in self.dm.root.policy_types if p.status == "ENABLED"]
 
     def Connect(self):
         """Initialize an authenticated session"""
@@ -369,7 +374,15 @@ class OrganizationDataBuilder(ModelBase):
 
     def __t_roots(self) -> Root:
         """Deserialize and transform org roots data into a single Root object"""
-        return [Root(**root) for root in self.__e_roots()][0]
+        roots = []
+        for data in self.__e_roots():
+            policy_types = [
+                PolicyTypeSummary(**p_type) for p_type in data["policy_types"]
+            ]
+            root = Root(**data)
+            root.policy_types = policy_types
+            roots.append(root)
+        return roots[0]
 
     def __l_roots(self) -> None:
         """Init the Root instance of the dm.root field"""
@@ -384,9 +397,9 @@ class OrganizationDataBuilder(ModelBase):
     def __e_policies(self) -> list[dict[str, Any]]:
         """Extract organization policy data from ListPolicies and DescribePolicy"""
         ret = []
-        for p in self.policy_types:
+        for p_type in self.enabled_policy_types:
             policies = []
-            p_summaries = self.api("list_policies", filter=p.type)
+            p_summaries = self.api("list_policies", filter=p_type)
             for p_summary in p_summaries:
                 p_detail = self.api("describe_policy", policy_id=p_summary["id"]).get(
                     "policy"
@@ -615,12 +628,12 @@ class OrganizationDataBuilder(ModelBase):
     ) -> list[EffectivePolicy]:
         """Extract a list of effective policies for a target node"""
         effective_policies = []
-        for p in self.policy_types:
+        for p_type in self.enabled_policy_types:
             # SCPs aren't supported for effective policies
-            if p.type == "SERVICE_CONTROL_POLICY":
+            if p_type == "SERVICE_CONTROL_POLICY":
                 continue
             data = self.api(
-                "describe_effective_policy", policy_type=p.type, target_id=target_id
+                "describe_effective_policy", policy_type=p_type, target_id=target_id
             )
             effective_policies.append(data)
         return effective_policies

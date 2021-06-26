@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+from typing import Union
 
 import pytest
 from moto import mock_organizations
@@ -45,8 +47,8 @@ def apiclient(
     )
 
 
-def paths_to_tree(paths: list[str]) -> dict[str, dict[str, str]]:
-    """Convert a list of paths into a tree"""
+def process_ou_paths(paths: list[str]) -> dict[str, dict[str, str]]:
+    """Convert a list of OU paths into a tree"""
     if paths is None:
         paths = []
     path_tree = {}
@@ -63,36 +65,80 @@ def paths_to_tree(paths: list[str]) -> dict[str, dict[str, str]]:
     for path in paths:
         elements = path.split("/")
         path_name = elements[-1]
-        parent_path = str.format("/%s", str.join("/", elements[:-1]))
-        if path_tree[parent_path]["children"] is None:
+        parent_path = f"{str.join('/', elements[:-1])}"
+        if parent_path == "":
+            parent_path = "/"
+        if path_tree.get(parent_path) is None:
+            if parent_path == "/":
+                path_tree[parent_path] = {"depth": 0}
+            else:
+                path_tree[parent_path] = {}
+        if path_tree[parent_path].get("children") is None:
             path_tree[parent_path]["children"] = []
         path_tree[parent_path]["children"].append(path_name)
         path_tree[path] = {
-            "depth": len(elements),
+            "depth": len(elements) - 1,
             "name": path_name,
             "parent_path": parent_path,
         }
     return path_tree
 
 
-def pathfile_to_tree(filepath: str) -> dict[str, dict[str, str]]:
-    """Read a file that's a list of paths and generate a tree"""
+def process_account_paths(paths: list[str]) -> dict[str, dict[str, str]]:
+    """Process a list of account paths in a list of account dicts"""
+    if paths is None:
+        paths = []
+    processed_paths = []
+    # [
+    #   {
+    #     "name": "acct-1",
+    #     "path": "/GrumpySysadmins/acct-1",
+    #     "parent_path": "/GrumptySysadmins"
+    #   },
+    #   {
+    #     "name": "acct-2",
+    #     "path": "/GrumpySysadmins/Services/acct-2",
+    #     "parent_path": "/GrumpySysadmins/Services"
+    #   }
+    # ]
+    for path in paths:
+        elements = path.split("/")
+        parent_path = f"{str.join('/', elements[:-1])}"
+        if parent_path == "":
+            parent_path = "/"
+        processed_paths.append(
+            {"name": elements[-1], "path": path, "parent_path": parent_path}
+        )
+    return processed_paths
+
+
+def process_pathfile(
+    filepath: str, path_type: str
+) -> Union[dict[str, dict[str, str]], list[dict[str, str]]]:
+    """Read a file that's a list of paths and generate a map or list of maps"""
     paths = None
-    with open(filepath, "rb") as f:
-        paths = f.readlines()
-    return paths_to_tree(paths)
+    with open(filepath, "r") as f:
+        paths = [line.rstrip("\n") for line in f.readlines()]
+    if path_type == "ou":
+        return process_ou_paths(paths)
+    elif path_type == "account":
+        return process_account_paths(paths)
+    else:
+        raise Exception(f"Invalid path type {path_type}")
 
 
-@pytest.fixture(scope="session")
+# @pytest.fixture(scope="session")
 def ou_paths():
     """A tree of OUs to create"""
-    return pathfile_to_tree("ou_paths.txt")
+    path = Path(__file__).parent / "fixtures" / "ou_paths.txt"
+    return process_pathfile(path.absolute(), path_type="ou")
 
 
-@pytest.fixture(scope="session")
+# @pytest.fixture(scope="session")
 def account_paths():
-    """A tree of accounts to create"""
-    return pathfile_to_tree("account_paths.txt")
+    """A list of accounts to create with populated parent data"""
+    path = Path(__file__).parent / "fixtures" / "account_paths.txt"
+    return process_pathfile(path.absolute(), path_type="account")
 
 
 @pytest.fixture(scope="session")

@@ -3,9 +3,9 @@
 /GrumpySysadmins/Services/Corp Fileshares
 /GrumpySysadmins/Services/Corp Fileshares/Prod
 /GrumpySysadmins/Services/Corp Fileshares/Test
-/GrumpySysadmins/Services/Jira
-/GrumpySysadmins/Services/Jira/Prod
-/GrumpySysadmins/Services/Jira/Test
+/GrumpySysadmins/Services/Atlassian
+/GrumpySysadmins/Services/Atlassian/Prod
+/GrumpySysadmins/Services/Atlassian/Test
 /GrumpySysadmins/Services/LegacyApp
 /GrumpySysadmins/Services/LegacyApp/Prod
 /Large BU
