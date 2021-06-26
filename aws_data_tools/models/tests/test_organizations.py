@@ -205,8 +205,10 @@ class TestOrganizationDataBuilder:
         assert isinstance(odb.dm.root, Root)
         assert odb.dm.root == org.root
 
-    def test_fetch_policies(self, odb):
-        assert True is True
+    def test_fetch_policies(self, aws_credentials, odb, org):
+        odb.fetch_policies()
+        for policy in odb.dm.policies:
+            assert isinstance(policy, Policy)
 
     def test_fetch_policy_targets(self, odb):
         assert True is True
