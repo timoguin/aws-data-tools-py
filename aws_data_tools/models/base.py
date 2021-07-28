@@ -2,13 +2,14 @@
 Base classes for data models
 """
 
-from collections.abc import MutableMapping
 from dataclasses import asdict, dataclass
 import json
 from typing import Any, Union
 
+from dacite import from_dict
 import yaml
 
+from ..client import APIClient
 from ..utils import serialize_dynamodb_item, serialize_dynamodb_items
 
 
@@ -16,36 +17,20 @@ from ..utils import serialize_dynamodb_item, serialize_dynamodb_items
 class ModelBase:
     """Base class for all models with helpers for serialization"""
 
-    def _flatten_dict(self, d: dict[str, str], parent_key: str = "", sep: str = "_"):
-        """Convert nested dict into a flattened one with key separators"""
-        items = []
-        for k, v in d.items():
-            new_key = parent_key + sep + k if parent_key else k
-            if isinstance(v, MutableMapping):
-                items.extend(self._flatten_dict(v, new_key, sep=sep).items())
-            else:
-                items.append((new_key, v))
-        return dict(items)
+    @property
+    def client(self) -> APIClient:
+        return self._client
 
-    def _flatten_dicts(self, data: list[dict[str, str]]):
-        """Flatten an iterable of dicts"""
-        items = []
-        for item in data:
-            if not isinstance(item, dict):
-                items.append(item)
-            items.append(self._flatten_dict(item))
-        return items
+    @client.setter
+    def client(self, client: APIClient):
+        if not isinstance(client, APIClient):
+            raise TypeError(f"Invalid client type: {type(client)}. Must be APIClient")
+        self._client = client
 
-    def _conditional_flatten(
-        self, data: Union[dict[str, str], list[dict[str, str]]], flatten: bool = False
-    ) -> Union[dict[str, str], list[dict[str, str]]]:
-        """Flatten a dict or a list of dicts if flatten is True"""
-        if not flatten:
-            return data
-        if isinstance(data, dict):
-            return self._flatten_dict(data)
-        elif isinstance(data, list):
-            return self._flatten_dicts(data)
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]):
+        """Initialize the model from a dictionary"""
+        return from_dict(data_class=cls, data=data)
 
     def to_dict(
         self, field_name: str = None, flatten: bool = False
@@ -59,10 +44,17 @@ class ModelBase:
         if field_name is not None:
             if field_name in data.keys():
                 if isinstance(data[field_name], (dict, list)):
-                    return self._conditional_flatten(data[field_name], flatten=flatten)
+                    return self.data[field_name]
                 return {field_name: data[field_name]}
             raise Exception(f"Field {field_name} does not exist")
-        return self._conditional_flatten(data, flatten=flatten)
+        return data
+
+    def to_list(self, **kwargs) -> list[dict[str, Any]]:
+        """Serialize the dataclass instance to a list of dicts (alias for to_dict)"""
+        data = self.to_dict(**kwargs)
+        if not isinstance(data, list):
+            raise Exception("Class or field is not a list")
+        return data
 
     def to_dynamodb(
         self, **kwargs
@@ -80,3 +72,67 @@ class ModelBase:
     def to_yaml(self, **kwargs) -> str:  # pragma: no cover
         """Serialize the dataclass instance to YAML"""
         return yaml.dump(self.to_dict(**kwargs))
+
+
+# @dataclass
+# class Edge():
+#     """Class that represents edges (node relationships) in a digraph"""
+#     _head_id: str
+#     _head_type: str
+#     _tail_id: str
+#     _tail_type: str
+#
+#
+# @dataclass
+# class Edges(ModelBase):
+#     """Class that represents a collection of edges for a node"""
+#     edges: list[Edge]
+#     _index: dict[str, int] = field(default_factory=dict)
+#
+#     @property
+#     def index(self) -> dict[str, Edge]:
+#         """A map of object IDs to their index in the edges list"""
+#         return {edge.id: index for index, edge in enumerate(self.edges)}
+#
+#     @property
+#     def mapping(self) -> dict[str, Edge]:
+#         """Output edges as a dict/map of ID -> Edge objects"""
+#         return {edge.id: edge for edge in self.edges}
+#
+#     def add_edge(self, edge: Union[Dict[str, str], Edge]) -> None:
+#         """Add an edge by passing either an Edge object or a dict"""
+#         if isinstance(edge, Edge):
+#             self.edges.append(edge)
+#         elif isinstance(edge, dict):
+#             self.edges.append(Edge.from_dict(edge))
+#         else:
+#             raise TypeError(f"Unsupported edge type: {type(edge)}")
+#
+#     def add_edges(self, edges: List[Union[Dict[str, str], Edge]]) -> None:
+#         """Add a list of Edge objects or dicts"""
+#         for edge in edges:
+#             self.add_edge(edge)
+#
+# @dataclass
+# class Node(ModelBase):
+#     """Base class for any node type in an graph"""
+#     _node_id: str
+#     _node_type: str
+#
+#     def node_id(self):
+#         return self._node_id
+#     node_type: str
+#
+#     _edges: Edges
+#
+#     @property
+#     def edges(self):
+#         return self._edges.edges
+#
+#     def add_edge(self, edge: Union[dict[str, str], Edge]) -> None:
+#         """Add an edge to the node via a dict or Edge object"""
+#         self._edges.add_edge(edge)
+#
+#     def delete_edge(self, edge_id: str) -> None:
+#         """Delete an edge by ID"""
+#         self._edges.delete_edge(edge_id)
