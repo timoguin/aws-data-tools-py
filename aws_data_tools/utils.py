@@ -1,6 +1,7 @@
 """
 Utilities for common operations that happen across different services
 """
+import json
 from typing import Any, Dict, List
 
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
@@ -51,3 +52,12 @@ def prepare_dynamodb_batch_put_request(
     return {
         table: [{"PutRequest": {"Item": item}} for item in items if item is not None]
     }
+
+
+def is_valid_json(s: str) -> bool:
+    """Check if a string is valid JSON"""
+    try:
+        json.loads(s)
+    except ValueError:
+        return False
+    return True
