@@ -76,7 +76,7 @@ class Message(ModelBase):
     def is_md5_of_message_attributes_valid(self) -> bool:
         return (
             self.md5_of_message_attributes == self.calculated_md5_of_message_attributes
-        )  # noqa
+        )
 
     @property
     def is_md5_of_body_valid(self) -> bool:
