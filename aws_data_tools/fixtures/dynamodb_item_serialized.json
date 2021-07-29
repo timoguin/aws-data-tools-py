@@ -1,0 +1,98 @@
+{
+  "id": {
+    "S": "123456789012"
+  },
+  "name": {
+    "S": "A test item"
+  },
+  "test_number": {
+    "N": "1"
+  },
+  "test_list": {
+    "L": [
+      {
+        "S": "foo"
+      },
+      {
+        "S": "bar"
+      },
+      {
+        "S": "baz"
+      }
+    ]
+  },
+  "test_map": {
+    "M": {
+      "test_string": {
+        "S": "A test string"
+      },
+      "test_number": {
+        "N": "5"
+      }
+    }
+  },
+  "test_list_of_objects": {
+    "L": [
+      {
+        "M": {
+          "foo": {
+            "S": "bar"
+          },
+          "biz": {
+            "S": "baz"
+          }
+        }
+      },
+      {
+        "M": {
+          "foo": {
+            "S": "bar"
+          },
+          "biz": {
+            "S": "baz"
+          }
+        }
+      }
+    ]
+  },
+  "test_nested_map": {
+    "M": {
+      "id": {
+        "M": {
+          "test_map": {
+            "M": {
+              "is_nested": {
+                "BOOL": true
+              }
+            }
+          },
+          "test_set": {
+            "L": [
+              {
+                "S": "just"
+              },
+              {
+                "S": "a"
+              },
+              {
+                "S": "set"
+              },
+              {
+                "S": "with"
+              },
+              {
+                "N": "2"
+              },
+              {
+                "S": "mixed"
+              },
+              {
+                "S": "types"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -31,8 +31,9 @@ shellcmd: ${VENV_DIR}
 lint: ${VENV_DIR}
 	@echo "Running the black code formatter"
 	@poetry run black ${ARGS} .
-	@echo "Running flakehell plugins"
-	@poetry run flakehell lint aws_data_tools
+	# flakehell currently disabled, see .pre-commit-config.yaml notesk
+	# @echo "Running flakehell plugins"
+	# @poetry run flakehell lint aws_data_tools
 
 .PHONY: lint-docs
 lint-docs: ${VENV_DIR}
@@ -72,7 +73,7 @@ build: ${VENV_DIR}
 .PHONY: test ## Run the test suite
 test: ${VENV_DIR}
 	@echo "Running test suite"
-	@poetry run pytest --suppress-no-test-exit-code
+	@poetry run pytest --cov ${OPTS} ${ARGS}
 
 # Ensures the Python venv exists and has dependencies installed
 ${VENV_DIR}:
