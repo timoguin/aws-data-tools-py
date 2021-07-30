@@ -1101,3 +1101,7 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Misc
+
+*.bak
