@@ -185,9 +185,18 @@ class ComplianceChangeNotification(ModelBase):
     record_version: str
 
 
+# TODO: It seems there is a "ScheduledEvaluation" event that is created when Config
+# triggers a scheduled rule evaluation (periodic). It is sent to the Lambda during
+# invocation.
+#
+# https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_develop-rules_example-events.html#periodic-example-event
+
+
 @dataclass
 class ConfigRulesEvaluationStartedNotification(ModelBase):
     """Notification sent when a rule evaluation has started"""
+
+    # TODO: Are there evaluation finished notifications?
 
     aws_account_id: str
     aws_region: str
