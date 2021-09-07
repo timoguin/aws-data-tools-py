@@ -1,4 +1,4 @@
-from dataclass import dataclass, field
+from dataclasses import dataclass, field
 from hashlib import md5
 
 from .base import ModelBase
@@ -54,10 +54,12 @@ class Message(ModelBase):
     attributes: MessageAttributes
     message_attributes: dict[str, CustomMessageAttributeDefinition]
     md5_of_body: str
-    md5_of_message_attributes: str = field(default=None)
     event_source: str
     event_source_arn: str
     aws_region: str
+
+    # Optional
+    md5_of_message_attributes: str = field(default=None)
 
     @property
     def is_fifo(self) -> bool:

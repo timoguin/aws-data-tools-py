@@ -4,7 +4,7 @@
 # See the documentation for the structure of various notifications:
 # https://docs.aws.amazon.com/config/latest/developerguide/notifications-for-AWS-Config.html  # noqa
 
-from dataclass import dataclass, field
+from dataclasses import dataclass, field
 from typing import Any, Union
 
 from .base import ModelBase

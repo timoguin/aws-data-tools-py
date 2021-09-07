@@ -1,4 +1,4 @@
-from dataclass import dataclass
+from dataclasses import dataclass
 
 from .base import ModelBase
 from ..utils import is_valid_json
