@@ -1,7 +1,8 @@
 # AWS Data Tools
 
 <!-- Badges -->
-[![Actions Status][gh-actions-badge]][gh-actions-link]
+[![Actions CI Status][gh-actions-ci-badge]][gh-actions-ci-link]
+[![Actions CodeQL Status][gh-actions-codeql-badge]][gh-actions-codeql-link]
 [![PyPI][pypi-badge]][pypi-link]
 [![License][license-badge]][license-link]
 
@@ -32,7 +33,7 @@ To dump a data representation of an AWS Organization, you can do the following u
 the builder:
 
 ```python
-from aws_data_tools.builders.organizations import OrganizationDataBuilder
+from aws_data_tools.models.organizations import OrganizationDataBuilder
 
 odb = OrganizationDataBuilder(init_all=True)
 organization = odb.as_json()
@@ -41,7 +42,7 @@ organization = odb.as_json()
 Here is how to do the same thing with the CLI:
 
 ```
-$ awsdata organization dump-json
+$ awsdata organization dump-all
 ```
 
 ## Usage
@@ -54,9 +55,9 @@ abstract some of these operations.
 ### Builders
 
 While it is possible to directly utilize and interact with the data models, probably
-the largest benefit is the [builders](aws_data_tools/builders) package. It abstracts
-any API operations and data transformations required to build data models. The models
-can then be serialized to dicts, as well as JSON or YAML strings.
+the largest benefit are the builders. They abstract any API operations and data
+transformations required to build data models. The models can then be serialized to
+dicts, as well as DOT, JSON, or YAML strings.
 
 A full model of an AWS Organization can be constructed using the
 `OrganizationDataBuilder` class. It handles recursing the organizational tree and
@@ -67,9 +68,9 @@ The simplest example pulls all supported organizational data and creates the rel
 data models:
 
 ```python
-from aws_data_tools.builders.organizations import OrganizationDataBuilder as odb
+from aws_data_tools.models.organizations import OrganizationDataBuilder
 
-org = odb(init_all=True)
+odb = OrganizationDataBuilder(init_all=True)
 ```
 
 Note that this makes many API calls to get this data. For example, every OU, policy,
@@ -84,9 +85,9 @@ requires 316 API calls! That's why this library was created.
 For more control over the process, you can init each set of components as desired:
 
 ```python
-from aws_data_tools.builders.organizations import OrganizationDataBuilder as odb
+from aws_data_tools.models.organizations import OrganizationDataBuilder
 
-org = odb()
+org = OrganizationDataBuilder()
 org.init_connection()
 org.init_organization()
 org.init_root()
@@ -274,8 +275,10 @@ View the [Contributing Guide](.github/CONTRIBUTING.md) to learn about giving bac
 
 
 <!-- Markown anchors -->
-[gh-actions-badge]: https://github.com/timoguin/aws-data-tools-py/actions/workflows/ci.yml/badge.svg
-[gh-actions-link]: https://github.com/timoguin/aws-data-tools-py/actions
+[gh-actions-ci-badge]: https://github.com/timoguin/aws-data-tools-py/actions/workflows/ci.yml/badge.svg
+[gh-actions-ci-link]: https://github.com/timoguin/aws-data-tools-py/actions/workflows/ci.yml
+[gh-actions-codeql-badge]: https://github.com/timoguin/aws-data-tools-py/actions/workflows/codeql-analysis.yml/badge.svg
+[gh-actions-codeql-link]: https://github.com/timoguin/aws-data-tools-py/actions/workflows/codeql-analysis.yml
 [license-badge]: https://img.shields.io/github/license/timoguin/aws-data-tools-py.svg
 [license-link]: https://github.com/timoguin/aws-data-tools-py/blob/main/LICENSE
 [pypi-badge]: https://badge.fury.io/py/aws-data-tools.svg

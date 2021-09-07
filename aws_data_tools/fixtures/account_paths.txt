@@ -1,0 +1,33 @@
+/acmeinc-not-in-an-ou
+/acmeinc-also-not-in-an-ou
+/acmeinc-forgotten-child
+/GrumpySysadmins/Services/Corp Fileshares/Prod/acmeinc-hr-fileshares-prod
+/GrumpySysadmins/Services/Corp Fileshares/Prod/acmeinc-engineering-fileshares-prod
+/GrumpySysadmins/Services/Corp Fileshares/Test/acmeinc-engineering-fileshares-test
+/GrumpySysadmins/Services/Corp Fileshares/Test/acmeinc-hr-fileshares-test
+/GrumpySysadmins/Services/Atlassian/Prod/acmeinc-jira-prod
+/GrumpySysadmins/Services/Atlassian/Test/acmeinc-jira-test
+/GrumpySysadmins/Services/Atlassian/Prod/acmeinc-bitbucket-prod
+/GrumpySysadmins/Services/Atlassian/Test/acmeinc-bitbucket-test
+/GrumpySysadmins/Services/Atlassian/Prod/acmeinc-crowd-prod
+/GrumpySysadmins/Services/Atlassian/Test/acmeinc-crowd-test
+/GrumpySysadmins/Services/Atlassian/Prod/acmeinc-confluence-prod
+/GrumpySysadmins/Services/Atlassian/Test/acmeinc-confluence-test
+/GrumpySysadmins/Services/Atlassian/Prod/acmeinc-confluence-prod
+/GrumpySysadmins/Services/Atlassian/Test/acmeinc-confluence-test
+/GrumpySysadmins/Services/LegacyApp/Prod/acmeinc-legacyapp
+/Large BU/Logging/Dev/acmeinc-elasticsearch-dev
+/Large BU/Logging/Prod/acmeinc-elasticsearch-prod
+/Large BU/Logging/QA/acmeinc-elasticsearch-qa
+/Large BU/Logging/Staging/acmeinc-elasticsearch-staging
+/Large BU/Website/Backend/Dev/acmeinc-large-bu-website-backend-dev
+/Large BU/Website/Backend/Prod/acmeinc-large-bu-website-backend-prod
+/Large BU/Website/Frontend/Dev/acmeinc-large-bu-website-frontend-dev
+/Large BU/Website/Frontend/Prod/acmeinc-large-bu-website-frontend-prod
+/Oracle Admins/dev/acmeinc-oracle-admins-db-dev
+/Oracle Admins/prd/acmeinc-oracle-admins-db-prd
+/Oracle Admins/prdtst/acmeinc-oracle-admins-db-prdtst
+/Super Cool BU/Groundbreaking Service/Dev/acmeinc-super-cool-bu-groundbreaking-service-dev
+/Super Cool BU/Groundbreaking Service/Prod/acmeinc-super-cool-bu-groundbreaking-service-prod
+/Super Cool BU/Testing/acmeinc-super-cool-bu-testing
+/YOLO BU/YOLO Service/Production/acmeinc-yolo-service-production
