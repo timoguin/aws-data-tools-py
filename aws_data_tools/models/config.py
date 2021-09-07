@@ -267,5 +267,29 @@ class DeliveryFailedNotification(ModelBase):
     # populated, with a null value for the S3 bucket location.
     #
     # I'm unsure what the notification would look like for a snapshot delivery failure.
-
     pass
+
+
+# Maps the value for the "messageType" field to the corresponding model
+MESSAGE_TYPE_MAP = {
+    "ConfigurationSnapshotDeliveryStarted": SnapshotDeliveryStartedNotification,
+    "ConfigurationSnapshotDeliveryCompleted": SnapshotDeliveryCompletedNotification,
+    "ConfigurationHistoryDeliveryStarted": HistoryDeliveryStartedNotification,
+    "ConfigurationHistoryDeliveryCompleted": HistoryDeliveryCompletedNotification,
+    "ConfigurationItemChangeNotification": ItemChangeNotification,
+    "ComplianceChangeNotification": ComplianceChangeNotification,
+    "ConfigRulesEvaluationStarted": ConfigRulesEvaluationStartedNotification,
+    "OversizedConfigurationItemChangeNotification": OversizedConfigurationItemChangeNotification,  # noqa
+    "DeliveryFailedNotification": DeliveryFailedNotification,
+}
+
+
+def get_model(message_type: str) -> Any:
+    """
+    Takes a message type string and returns the model class based on the above
+    mapping
+    """
+    model = MESSAGE_TYPE_MAP.get(message_type)
+    if model is None:
+        raise Exception(f"Model not found for message type {message_type}")
+    return model

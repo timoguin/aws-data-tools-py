@@ -12,7 +12,7 @@ from humps import depascalize
 import yaml
 
 from ..client import APIClient
-from ..utils import serialize_dynamodb_item, serialize_dynamodb_items
+from ..utils.dynamodb import serialize_dynamodb_item, serialize_dynamodb_items
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
@@ -71,17 +71,29 @@ class ModelBase:
 
     def to_json(self, escape: bool = False, **kwargs) -> str:  # pragma: no cover
         """Serialize the dataclass instance to a JSON string"""
-        s = json.dumps(self.to_dict(**kwargs), default=str)
+        data = json.dumps(self.to_dict(**kwargs), default=str)
         if escape:
-            return s.replace('"', '\\"').replace("\n", "\\n")
-        return s
+            return data.replace('"', '"').replace("\n", "\\n")
+        return data
+
+    def from_json(self, s: str, **kwargs) -> Any:  # pragma: no cover
+        """Deserialize the JSON string to an instance of the dataclass"""
+        # Try to remove any escape characters from the string based on the assumption
+        # that it could be an escape characters
+        return self.from_dict(json.loads(s.replace('\\"', '"').replace("\\n", "\n")))
 
     def to_yaml(self, escape: bool = False, **kwargs) -> str:  # pragma: no cover
         """Serialize the dataclass instance to a YAML string"""
-        s = yaml.dump(self.to_dict(**kwargs))
+        data = yaml.dump(self.to_dict(**kwargs))
         if escape:
-            return s.replace('"', '\\"').replace("\n", "\\n")
-        return s
+            return data.replace('"', '"').replace("\n", "\\n")
+        return data
+
+    def from_yaml(self, s: str, **kwargs) -> Any:  # pragma: no cover
+        """Deserialize the YAML string to an instance of the dataclass"""
+        # Try to remove any escape characters from the string based on the assumption
+        # that it could have escape characters
+        return self.from_dict(yaml.safe_load(s.replace('\\"', '"')))
 
 
 # @dataclass

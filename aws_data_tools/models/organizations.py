@@ -9,7 +9,7 @@ from typing import Any, Union
 import graphviz
 
 from ..client import APIClient
-from ..utils import query_tags
+from ..utils.tags import query_tags
 from .base import ModelBase
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
