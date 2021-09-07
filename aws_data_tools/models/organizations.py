@@ -3,6 +3,7 @@ Dataclass builders and models for working with AWS Organizations APIs
 """
 
 from dataclasses import dataclass, field, InitVar
+import logging
 from typing import Any, Union
 
 import graphviz
@@ -10,6 +11,8 @@ import graphviz
 from ..client import APIClient
 from ..utils import query_tags
 from .base import ModelBase
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 _SERVICE_NAME = "organizations"

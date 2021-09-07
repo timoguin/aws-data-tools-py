@@ -1,6 +1,10 @@
+import logging
+
 from humps import depascalize
 
 from ..client import APIClient
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 def tag_list_to_dict(tags: list[dict[str, str]]) -> dict[str, str]:

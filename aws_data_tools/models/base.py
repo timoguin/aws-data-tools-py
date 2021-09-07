@@ -4,6 +4,7 @@ Base classes for data models
 
 from dataclasses import asdict, dataclass
 import json
+import logging
 from typing import Any, Union
 
 from dacite import from_dict
@@ -12,6 +13,8 @@ import yaml
 
 from ..client import APIClient
 from ..utils import serialize_dynamodb_item, serialize_dynamodb_items
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 @dataclass
@@ -66,13 +69,19 @@ class ModelBase:
             return serialize_dynamodb_items(items=data)
         return serialize_dynamodb_item(item=data)
 
-    def to_json(self, **kwargs) -> str:  # pragma: no cover
-        """Serialize the dataclass instance to JSON"""
-        return json.dumps(self.to_dict(**kwargs), default=str)
+    def to_json(self, escape: bool = False, **kwargs) -> str:  # pragma: no cover
+        """Serialize the dataclass instance to a JSON string"""
+        s = json.dumps(self.to_dict(**kwargs), default=str)
+        if escape:
+            return s.replace('"', '\\"').replace("\n", "\\n")
+        return s
 
-    def to_yaml(self, **kwargs) -> str:  # pragma: no cover
-        """Serialize the dataclass instance to YAML"""
-        return yaml.dump(self.to_dict(**kwargs))
+    def to_yaml(self, escape: bool = False, **kwargs) -> str:  # pragma: no cover
+        """Serialize the dataclass instance to a YAML string"""
+        s = yaml.dump(self.to_dict(**kwargs))
+        if escape:
+            return s.replace('"', '\\"').replace("\n", "\\n")
+        return s
 
 
 # @dataclass

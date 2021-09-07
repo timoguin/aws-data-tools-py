@@ -3,11 +3,14 @@ Module containing classes that abstract interactions with boto3 sessions and cli
 """
 
 from dataclasses import InitVar, dataclass, field
+import logging
 from typing import Any, Union
 
 from boto3.session import Session
 from botocore.client import BaseClient
 from humps import depascalize, pascalize
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 _DEFAULT_PAGINATION_CONFIG = {"MaxItems": 500}

@@ -1,13 +1,18 @@
-# Classes and utilities for working with notification from AWS Config. This is a work
-# in progress.
-#
-# See the documentation for the structure of various notifications:
-# https://docs.aws.amazon.com/config/latest/developerguide/notifications-for-AWS-Config.html  # noqa
+"""
+Classes and utilities for working with notification from AWS Config. This is a work
+in progress.
+
+See the documentation for the structure of various notifications:
+https://docs.aws.amazon.com/config/latest/developerguide/notifications-for-AWS-Config.html  # noqa
+"""
 
 from dataclasses import dataclass, field
+import logging
 from typing import Any, Union
 
 from .base import ModelBase
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 @dataclass

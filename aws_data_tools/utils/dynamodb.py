@@ -1,7 +1,10 @@
 """Utilities for working with DynamoDB"""
+import logging
 from typing import Any
 
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 def deserialize_dynamodb_item(item: dict[str, Any]) -> dict[str, Any]:

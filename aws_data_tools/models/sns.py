@@ -1,7 +1,10 @@
 from dataclasses import dataclass
+import logging
 
 from .base import ModelBase
 from ..utils.validators import is_valid_json
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 @dataclass
