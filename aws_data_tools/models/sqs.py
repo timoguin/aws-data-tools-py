@@ -2,11 +2,11 @@ from dataclasses import dataclass, field
 from hashlib import md5
 
 from .base import ModelBase
-from ..utils import is_valid_json
+from ..utils.validators import is_valid_json
 
 
 @dataclass
-class MessageAttributes(ModelBase):
+class SqsMessageAttributes(ModelBase):
     """Attributes attached to an SQS message"""
 
     # TODO: Unsure if some of these string will need to be cast to int or other types
@@ -37,7 +37,7 @@ class MessageAttributes(ModelBase):
 
 
 @dataclass
-class CustomMessageAttributeDefinition(ModelBase):
+class SqsCustomMessageAttributeDefinition(ModelBase):
     """Type definition and value for a custom message attribute"""
 
     data_type: str
@@ -45,14 +45,14 @@ class CustomMessageAttributeDefinition(ModelBase):
 
 
 @dataclass
-class Message(ModelBase):
+class SqsMessage(ModelBase):
     """Schema for an SQS message"""
 
     message_id: str
     receipt_handle: str
     body: str
-    attributes: MessageAttributes
-    message_attributes: dict[str, CustomMessageAttributeDefinition]
+    attributes: SqsMessageAttributes
+    message_attributes: dict[str, SqsCustomMessageAttributeDefinition]
     md5_of_body: str
     event_source: str
     event_source_arn: str

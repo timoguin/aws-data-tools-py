@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from .base import ModelBase
-from ..utils import is_valid_json
+from ..utils.validators import is_valid_json
 
 
 @dataclass
-class Message(ModelBase):
+class SnsMessage(ModelBase):
     """Schema for an SNS message"""
 
     message: str
