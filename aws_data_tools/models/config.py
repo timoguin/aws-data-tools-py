@@ -74,6 +74,8 @@ class ConfigurationItem(ModelBase):
     """Configuration state and relationships for a resource"""
 
     arn: str
+    availability_zone: str
+    aws_account_id: str
     configuration: dict[str, Any]
     configuration_item_capture_time: str
     configuration_item_status: str
@@ -86,16 +88,11 @@ class ConfigurationItem(ModelBase):
     resource_type: str
     tags: dict[str, str]
 
-    availability_zone: str = field(default=None)
-
-    # TODO: Some examples say "account_id" and others say "aws_account_id"
-    account_id: str = field(default=None)
-    aws_account_id: str = field(default=None)
-
     # TODO: Some examples don't show this field
     configuration_state_md5_hash: str = field(default=None)
 
-    # TODO: Some examples don't show this field. Unsure of the type.
+    # TODO: Some examples don't show this field. Unsure if type is consistent.
+    # Real-life item change events have a dict of dicts.
     supplementary_configuration: dict[str, Any] = field(default_factory=dict)
 
 
@@ -120,24 +117,18 @@ class ConfigurationItemDiff(ModelBase):
 class ItemChangeNotification(ModelBase):
     """Notification sent when configuration has changed for a resource"""
 
+    configuration_item: dict[str, Any]
+    configuration_item_diff: dict[str, ConfigurationItemDiff]
     message_type: str  # Should be "ConfigurationItemChangeNotification"
-    configuration_item_diff: dict[str, ConfigurationItemDiff] = field(
-        default_factory=dict
-    )
+    notification_creation_time: str
+    record_version: str
 
-    # TODO: Check if docs are correct about using "notification_create_time" instead of
-    # "notification_creation_time" like other notification types. Also check if
-    # "message_version" should be "record_version" like the others. For now, we're
-    # including the alternate names and marking them all as optional.
-    message_version: str = field(default=None)
-    record_version: str = field(default=None)
-    notification_create_time: str = field(default=None)
-    notification_creation_time: str = field(default=None)
-
-    # TODO: Some examples in the docs say "ConfigurationItem" and others say
-    # "ConfigurationItems". For now we'll add both options and mark them as optional.
-    configuration_items: list[dict[str, Any]] = field(default_factory=list)
-    configuration_item: dict[str, Any] = field(default_factory=dict)
+    # # TODO: Some examples in the docs say "ConfigurationItem" and others say
+    # # "ConfigurationItems". For now we'll add both options and mark them as optional.
+    # configuration_items: list[dict[str, Any]] = field(default_factory=list)
+    # configuration_item: dict[str, Any] = field(default_factory=dict)
+    #
+    # Real-life item change events show "configuration_item"
 
 
 @dataclass
