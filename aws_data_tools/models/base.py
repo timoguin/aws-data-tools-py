@@ -8,7 +8,7 @@ import logging
 from typing import Any, Union
 
 from dacite import from_dict
-from humps import depascalize
+from humps import decamelize, depascalize
 import yaml
 
 from ..client import APIClient
@@ -34,7 +34,7 @@ class ModelBase:
     @classmethod
     def from_dict(cls, data: dict[str, Any]):
         """Initialize the model from a dictionary"""
-        return from_dict(data_class=cls, data=depascalize(data))
+        return from_dict(data_class=cls, data=decamelize(depascalize(data)))
 
     def to_dict(
         self, field_name: str = None, flatten: bool = False
