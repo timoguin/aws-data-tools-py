@@ -121,7 +121,9 @@ class ItemChangeNotification(ModelBase):
     """Notification sent when configuration has changed for a resource"""
 
     message_type: str  # Should be "ConfigurationItemChangeNotification"
-    configuration_item_diff: dict[str, ConfigurationItemDiff]
+    configuration_item_diff: dict[str, ConfigurationItemDiff] = field(
+        default_factory=dict
+    )
 
     # TODO: Check if docs are correct about using "notification_create_time" instead of
     # "notification_creation_time" like other notification types. Also check if

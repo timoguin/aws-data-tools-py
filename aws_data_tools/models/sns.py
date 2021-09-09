@@ -8,8 +8,8 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 @dataclass
-class SnsMessage(ModelBase):
-    """Schema for an SNS message"""
+class SnsMessageData(ModelBase):
+    """Represents the data from an SNS message that is under the "Sns" field"""
 
     message: str
     message_id: str
@@ -25,7 +25,17 @@ class SnsMessage(ModelBase):
     # TODO: Unsure if there are additional attributes if the message comes from an SNS
     # FIFO topic
 
+
+@dataclass
+class SnsMessage(ModelBase):
+    """Schema for an SNS message"""
+
+    event_source: str
+    event_version: str
+    event_subscription_arn: str
+    sns: SnsMessageData
+
     @property
     def is_body_json(self) -> bool:
         """Check if the message body is a JSON string"""
-        return is_valid_json(self.body)
+        return is_valid_json(self.sns.message)
