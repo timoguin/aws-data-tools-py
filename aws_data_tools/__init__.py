@@ -1,6 +1,9 @@
 """
 A library for working with data from AWS APIs
 """
+# flake8: noqa: F401
+
+from . import client, models, utils
 
 __VERSION__ = "0.1.0-beta2"
 
