@@ -76,11 +76,12 @@ class ModelBase:
             return data.replace('"', '"').replace("\n", "\\n")
         return data
 
-    def from_json(self, s: str, **kwargs) -> Any:  # pragma: no cover
+    @classmethod
+    def from_json(cls, s: str, **kwargs) -> Any:  # pragma: no cover
         """Deserialize the JSON string to an instance of the dataclass"""
         # Try to remove any escape characters from the string based on the assumption
         # that it could be an escape characters
-        return self.from_dict(json.loads(s.replace('\\"', '"').replace("\\n", "\n")))
+        return cls.from_dict(json.loads(s.replace('\\"', '"').replace("\\n", "\n")))
 
     def to_yaml(self, escape: bool = False, **kwargs) -> str:  # pragma: no cover
         """Serialize the dataclass instance to a YAML string"""
@@ -89,11 +90,12 @@ class ModelBase:
             return data.replace('"', '"').replace("\n", "\\n")
         return data
 
-    def from_yaml(self, s: str, **kwargs) -> Any:  # pragma: no cover
+    @classmethod
+    def from_yaml(cls, s: str, **kwargs) -> Any:  # pragma: no cover
         """Deserialize the YAML string to an instance of the dataclass"""
         # Try to remove any escape characters from the string based on the assumption
         # that it could have escape characters
-        return self.from_dict(yaml.safe_load(s.replace('\\"', '"')))
+        return cls.from_dict(yaml.safe_load(s.replace('\\"', '"')))
 
 
 # @dataclass
