@@ -74,7 +74,6 @@ class ConfigurationItem(ModelBase):
     """Configuration state and relationships for a resource"""
 
     arn: str
-    availability_zone: str = field(default=None)
     configuration: dict[str, Any]
     configuration_item_capture_time: str
     configuration_item_status: str
@@ -86,6 +85,8 @@ class ConfigurationItem(ModelBase):
     resource_id: str
     resource_type: str
     tags: dict[str, str]
+
+    availability_zone: str = field(default=None)
 
     # TODO: Some examples say "account_id" and others say "aws_account_id"
     account_id: str = field(default=None)
@@ -120,6 +121,7 @@ class ItemChangeNotification(ModelBase):
     """Notification sent when configuration has changed for a resource"""
 
     message_type: str  # Should be "ConfigurationItemChangeNotification"
+    configuration_item_diff: dict[str, ConfigurationItemDiff]
 
     # TODO: Check if docs are correct about using "notification_create_time" instead of
     # "notification_creation_time" like other notification types. Also check if
@@ -134,7 +136,6 @@ class ItemChangeNotification(ModelBase):
     # "ConfigurationItems". For now we'll add both options and mark them as optional.
     configuration_items: list[dict[str, Any]] = field(default_factory=list)
     configuration_item: dict[str, Any] = field(default_factory=dict)
-    configuration_item_diff: dict[str, ConfigurationItemDiff]
 
 
 @dataclass
@@ -219,7 +220,6 @@ class OversizedConfigurationItemSummary(ModelBase):
     """
 
     arn: str
-    availability_zone: str = field(default=None)
     aws_account_id: str
     aws_region: str
     change_type: str
@@ -230,8 +230,10 @@ class OversizedConfigurationItemSummary(ModelBase):
     configuration_state_md5_hash: str
     resource_creation_time: str
     resource_id: str
-    resource_name: str = field(default=None)
     resource_type: str
+
+    availability_zone: str = field(default=None)
+    resource_name: str = field(default=None)
 
 
 @dataclass
