@@ -118,7 +118,7 @@ class ItemChangeNotification(ModelBase):
     """Notification sent when configuration has changed for a resource"""
 
     configuration_item: dict[str, Any]
-    configuration_item_diff: dict[str, ConfigurationItemDiff]
+    configuration_item_diff: ConfigurationItemDiff
     message_type: str  # Should be "ConfigurationItemChangeNotification"
     notification_creation_time: str
     record_version: str
