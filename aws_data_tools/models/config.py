@@ -101,8 +101,8 @@ class ConfigurationItemDiffChangedProperty(ModelBase):
     """Represents a changed property of a configuration item"""
 
     change_type: str
-    previous_value: Optional[Union[str, dict[str, Any]]] = field(default=None)
-    updated_value: Optional[Union[str, dict[str, Any]]] = field(default=None)
+    previous_value: Optional[Union[int, str, dict[str, Any]]] = field(default=None)
+    updated_value: Optional[Union[int, str, dict[str, Any]]] = field(default=None)
 
 
 @dataclass
