@@ -8,7 +8,7 @@ https://docs.aws.amazon.com/config/latest/developerguide/notifications-for-AWS-C
 
 from dataclasses import dataclass, field
 import logging
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 from .base import ModelBase
 
@@ -101,8 +101,8 @@ class ConfigurationItemDiffChangedProperty(ModelBase):
     """Represents a changed property of a configuration item"""
 
     change_type: str
-    previous_value: Union[str, dict[str, Any]] = field(default=None)
-    updated_value: Union[str, dict[str, Any]] = field(default=None)
+    previous_value: Optional[Union[str, dict[str, Any]]] = field(default=None)
+    updated_value: Optional[Union[str, dict[str, Any]]] = field(default=None)
 
 
 @dataclass
