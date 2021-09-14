@@ -2,6 +2,7 @@
 Dataclass builders and models for working with AWS Organizations APIs
 """
 
+from datetime import datetime
 from dataclasses import dataclass, field, InitVar
 import logging
 from typing import Any, Union
@@ -19,7 +20,7 @@ _SERVICE_NAME = "organizations"
 _OU_MAXDEPTH = 5
 
 
-# @dataclass
+@dataclass
 class ParChild(ModelBase):
     """A parent or child representation for a node"""
 
@@ -168,10 +169,11 @@ class PolicySummary(ModelBase):
 
     arn: str
     aws_managed: bool
-    description: str
     id: str
     name: str
     type: str
+
+    description: str = field(default=None)
 
     _valid_types = [
         "AISERVICES_OPT_OUT_POLICY",
@@ -320,7 +322,7 @@ class Account(ModelBase):
     arn: str
     email: str
     id: str
-    joined_timestamp: str
+    joined_timestamp: datetime
     name: str
     joined_method: str
     status: str
@@ -383,7 +385,13 @@ class Organization(ModelBase):
         root = self.api("list_roots")[0]
         policies = {}
         if include_policies:
-            policies = {"policies": self.api("list_policies")}
+            responses = []
+            for policy_type in _VALID_POLICY_TYPES:
+                response = self.api("list_policies", filter=policy_type)
+                responses.append(response)
+            policies["policies"] = [
+                {"policy_summary": policy_summary} for policy_summary in responses
+            ]
         return Organization.from_dict({**org, **root, **policies})
 
     @classmethod
@@ -420,7 +428,7 @@ class Organization(ModelBase):
             chain=10,
         )
 
-    def __post_init__() -> None:
+    def __post_init__(self) -> None:
         # fetch desc
         pass
 
@@ -446,13 +454,13 @@ class OrganizationDataBuilder(ModelBase):
     """
 
     client: APIClient = field(default=None, repr=False)
-    dm: Organization = field(default_factory=Organization.from_api)
+    # dm: Organization = field(default_factory=Organization.from_api)
+    dm: Organization = field(default=None)
 
     # Used by __post_init__() to determine what data to initialize (default is none)
     init_all: InitVar[bool] = field(default=False)
     init_connection: InitVar[bool] = field(default=True)
     init_organization: InitVar[bool] = field(default=False)
-    init_root: InitVar[bool] = field(default=False)
     init_policies: InitVar[bool] = field(default=False)
     init_policy_tags: InitVar[bool] = field(default=False)
     init_ous: InitVar[bool] = field(default=False)
@@ -478,8 +486,6 @@ class OrganizationDataBuilder(ModelBase):
         # on the root.
         if self.dm is None:
             self.fetch_organization()
-        if self.dm.root is None:
-            self.fetch_root()
         return [p.type for p in self.dm.root.policy_types if p.status == "ENABLED"]
 
     def Connect(self):
@@ -493,15 +499,24 @@ class OrganizationDataBuilder(ModelBase):
             self.Connect()
         return self.client.api(func, **kwargs)
 
-    @staticmethod
-    def fetch_organization() -> None:
+    # @staticmethod
+    def fetch_organization(self, include_policies: bool = True) -> None:
         """Initialize the organization object from the Organizations API(s)"""
-        raise NotImplementedError
         # TODO: Was trying to convert this to a static method
-        # org = self.api("describe_organization").get("organization")
-        # root = self.api("list_roots")[0]
-        # policies = {"policies": self.api("list_policies")}
-        # self.dm = Organization.from_dict({**org, **root, **policies})
+        # raise NotImplementedError
+        org = self.api("describe_organization").get("organization")
+        root = self.api("list_roots")[0]
+        policies = {}
+        if include_policies:
+            responses = []
+            for policy_type in _VALID_POLICY_TYPES:
+                response = self.api("list_policies", filter=policy_type)
+                responses.extend(response)
+            policies["policies"] = [
+                {"policy_summary": policy_summary} for policy_summary in responses
+            ]
+        root = {"root": root}
+        self.dm = Organization.from_dict({**org, **root, **policies})
 
     def __e_policies(self) -> list[dict[str, Any]]:
         """Extract organization policy data from ListPolicies and DescribePolicy"""
@@ -641,8 +656,6 @@ class OrganizationDataBuilder(ModelBase):
     ) -> list[OrganizationalUnit]:
         """Recurse the org tree and return a list of OU dicts"""
         if parents is None:
-            if self.dm.root is None:
-                self.fetch_root()
             parents = [self.dm.root.to_parchild()]
         if self.dm._parent_child_tree is None:
             self.dm._parent_child_tree = {}
@@ -662,7 +675,8 @@ class OrganizationDataBuilder(ModelBase):
                 "list_organizational_units_for_parent", parent_id=parent.id
             )
             for ou_result in ou_results:
-                ou = OrganizationalUnit.from_dict({**ou_result, **parent.to_dict()})
+                ou = OrganizationalUnit.from_dict(ou_result)
+                ou.parent = parent
                 ou_to_parchild = ou.to_parchild()
                 self.dm._parent_child_tree[parent.id].append(ou_to_parchild)
                 self.dm._child_parent_tree[ou.id] = parent
@@ -670,7 +684,8 @@ class OrganizationDataBuilder(ModelBase):
                 next_parents.append(ou_to_parchild)
             acct_results = self.api("list_accounts_for_parent", parent_id=parent.id)
             for acct_result in acct_results:
-                account = Account.from_dict({**acct_result, **parent.to_dict()})
+                account = Account.from_dict(acct_result)
+                account.parent = parent
                 self.dm._parent_child_tree[parent.id].append(account.to_parchild())
                 self.dm._child_parent_tree[account.id] = parent
         return self.__e_ous_recurse(parents=next_parents, ous=ous, depth=depth + 1)
@@ -812,8 +827,6 @@ class OrganizationDataBuilder(ModelBase):
 
     def __l_root_tags(self) -> None:
         """Load tags for the organization root"""
-        if self.dm.root is None:
-            self.fetch_root()
         data = self.__et_tags(resource_ids=[self.dm.root.id])
         self.dm.root.tags = data[self.dm.root.id]
 
@@ -873,7 +886,6 @@ class OrganizationDataBuilder(ModelBase):
         """Initialize all data for nodes and edges in the organization"""
         self.Connect()
         self.fetch_organization()
-        self.fetch_root()
         self.fetch_root_tags()
         self.fetch_policies()
         self.fetch_policy_tags()
@@ -889,7 +901,6 @@ class OrganizationDataBuilder(ModelBase):
         init_all: bool,
         init_connection: bool,
         init_organization: bool,
-        init_root: bool,
         init_policies: bool,
         init_policy_tags: bool,
         init_ous: bool,
@@ -907,8 +918,6 @@ class OrganizationDataBuilder(ModelBase):
             self.Connect()
         if init_organization:
             self.fetch_organization()
-        if init_root:
-            self.fetch_root()
         if init_policies:
             self.fetch_policies()
         if init_policy_tags:

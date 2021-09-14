@@ -19,7 +19,7 @@ from .. import get_version
 from ..client import APIClient
 from ..models.organizations import Account, OrganizationDataBuilder
 
-from ..utils import (
+from ..utils.dynamodb import (
     deserialize_dynamodb_items,
     prepare_dynamodb_batch_put_request,
 )
