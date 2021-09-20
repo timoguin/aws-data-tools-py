@@ -118,10 +118,11 @@ class ItemChangeNotification(ModelBase):
     """Notification sent when configuration has changed for a resource"""
 
     configuration_item: dict[str, Any]
-    configuration_item_diff: ConfigurationItemDiff
     message_type: str  # Should be "ConfigurationItemChangeNotification"
     notification_creation_time: str
     record_version: str
+
+    configuration_item_diff: Optional[ConfigurationItemDiff]
 
     # # TODO: Some examples in the docs say "ConfigurationItem" and others say
     # # "ConfigurationItems". For now we'll add both options and mark them as optional.
