@@ -119,10 +119,10 @@ class ItemChangeNotification(ModelBase):
 
     configuration_item: dict[str, Any]
     message_type: str  # Should be "ConfigurationItemChangeNotification"
-    record_version: str
 
     configuration_item_diff: Optional[ConfigurationItemDiff]
     notification_creation_time: Optional[str]
+    record_version: Optional[str]
 
     # # TODO: Some examples in the docs say "ConfigurationItem" and others say
     # # "ConfigurationItems". For now we'll add both options and mark them as optional.
