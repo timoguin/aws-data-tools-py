@@ -163,8 +163,8 @@ class ComplianceEvaluationResult(ModelBase):
     # Don't know the expected type of either of these. The examples only show "null"
     # for the values. Going to mark annotation as Any type and result_token as string.
     # TODO: Verify the types when not null.
-    annotation: Any = field(default=None)
-    result_token: str = field(default=None)
+    annotation: Optional[Any] = field(default=None)
+    result_token: Optional[str] = field(default=None)
 
 
 @dataclass
