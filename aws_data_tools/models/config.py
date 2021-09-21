@@ -19,44 +19,48 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 class SnapshotDeliveryStartedNotification(ModelBase):
     """Notification sent when a config snapshot delivery is started"""
 
-    config_snapshot_id: str
     message_type: str  # Should be "ConfigurationSnapshotDeliveryStarted"
     notification_creation_time: str
     record_version: str
+
+    config_snapshot_id: Optional[str]
 
 
 @dataclass
 class SnapshotDeliveryCompletedNotification(ModelBase):
     """Notification sent when a config snapshot delivery is completed"""
 
-    config_snapshot_id: str
     message_type: str  # Should be "ConfigurationSnapshotDeliveryCompleted"
     notification_creation_time: str
     record_version: str
     s3_bucket: str
     s3_object_key: str
 
+    config_snapshot_id: Optional[str]
+
 
 @dataclass
 class HistoryDeliveryStartedNotification(ModelBase):
     """Notification sent when config history delivery is started"""
 
-    config_snapshot_id: str
     message_type: str  # Should be "ConfigurationHistoryDeliveryStarted"
     notification_creation_time: str
     record_version: str
+
+    config_snapshot_id: Optional[str]
 
 
 @dataclass
 class HistoryDeliveryCompletedNotification(ModelBase):
     """Notification sent when config history delivery is completed"""
 
-    config_snapshot_id: str
     message_type: str  # Should be "ConfigurationHistoryDeliveryCompleted"
     notification_creation_time: str
     record_version: str
     s3_bucket: str
     s3_object_key: str
+
+    config_snapshot_id: Optional[str]
 
 
 @dataclass
