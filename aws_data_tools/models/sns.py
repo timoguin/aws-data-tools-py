@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import logging
+from typing import Optional
 
 from .base import ModelBase
 from ..utils.validators import is_valid_json
@@ -32,14 +33,15 @@ class SnsMessage(ModelBase):
 
     message: str
     message_id: str
-    signature: str
-    signature_version: str
-    signing_cert_url: str
     subject: str
     timestamp: str
     topic_arn: str
     type: str
     unsubscribe_url: str
+
+    signature: Optional[str]
+    signature_version: Optional[str]
+    signing_cert_url: Optional[str]
 
     # TODO: Unsure if there are additional attributes if the message comes from an SNS
     # FIFO topic

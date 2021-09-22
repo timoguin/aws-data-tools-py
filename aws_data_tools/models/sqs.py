@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from hashlib import md5
 import logging
+from typing import Optional
 
 from .base import ModelBase
 from ..utils.validators import is_valid_json
@@ -51,18 +52,19 @@ class SqsCustomMessageAttributeDefinition(ModelBase):
 class SqsMessage(ModelBase):
     """Schema for an SQS message"""
 
+    body: str
+    md5_of_body: str
     message_id: str
     receipt_handle: str
-    body: str
-    attributes: SqsMessageAttributes
-    message_attributes: dict[str, SqsCustomMessageAttributeDefinition]
-    md5_of_body: str
-    event_source: str
-    event_source_arn: str
-    aws_region: str
+
+    attributes: Optional[SqsMessageAttributes]
+    message_attributes: Optional[dict[str, SqsCustomMessageAttributeDefinition]]
+    event_source: Optional[str]
+    event_source_arn: Optional[str]
+    aws_region: Optional[str]
 
     # Optional
-    md5_of_message_attributes: str = field(default=None)
+    md5_of_message_attributes: Optional[str] = field(default=None)
 
     @property
     def is_fifo(self) -> bool:
