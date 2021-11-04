@@ -188,6 +188,8 @@ class ComplianceChangeNotification(ModelBase):
     message_type: str  # ComplianceChangeNotification
     record_version: str
 
+    # m.new_evaluation_result.compliance_type will equal COMPLIANT or NON_CONPLIANT
+
 
 # TODO: It seems there is a "ScheduledEvaluation" event that is created when Config
 # triggers a scheduled rule evaluation (periodic). It is sent to the Lambda during

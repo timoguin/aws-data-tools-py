@@ -7,6 +7,7 @@ from dataclasses import dataclass, field, InitVar
 import logging
 from typing import Any, Union
 
+# Make this an optional dependency and handle import failure
 import graphviz
 
 from ..client import APIClient

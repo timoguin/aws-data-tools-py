@@ -11,7 +11,6 @@ from dacite import from_dict
 from humps import decamelize, depascalize
 import yaml
 
-from ..client import APIClient
 from ..utils.dynamodb import serialize_dynamodb_item, serialize_dynamodb_items
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -20,16 +19,6 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 @dataclass
 class ModelBase:
     """Base class for all models with helpers for serialization"""
-
-    @property
-    def client(self) -> APIClient:
-        return self._client
-
-    @client.setter
-    def client(self, client: APIClient):
-        if not isinstance(client, APIClient):
-            raise TypeError(f"Invalid client type: {type(client)}. Must be APIClient")
-        self._client = client
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]):
