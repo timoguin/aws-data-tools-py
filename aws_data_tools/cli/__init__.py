@@ -2,52 +2,115 @@
 CLI interface for working with data from AWS APIs
 """
 
-from itertools import zip_longest
-from json import dumps as json_dumps
-from json import load as json_load
-from re import fullmatch
-from traceback import format_exc
-from typing import Any, Dict, List
+import itertools
+import json
+import os
+import re
+import traceback
+from typing import Any
 
 from botocore.exceptions import ClientError, NoCredentialsError
 
-from click import (
-    echo,
-    group,
-    open_file,
-    option,
-    pass_context,
-    secho,
-    version_option,
-    Choice,
-)
+import click
+import click_completion
+import click_completion.core
 
 from .. import get_version
 from ..client import APIClient
-from ..builders.organizations import OrganizationDataBuilder
-from ..models.organizations import Account
+from ..models.organizations import Account, OrganizationDataBuilder
 
-from ..utils import (
+from ..utils.dynamodb import (
     deserialize_dynamodb_items,
     prepare_dynamodb_batch_put_request,
 )
 
 
+def custom_startswith(string, incomplete):
+    """A custom completion matching that supports case insensitive matching"""
+    if os.environ.get("_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE"):
+        string = string.lower()
+        incomplete = incomplete.lower()
+    return string.startswith(incomplete)
+
+
+click_completion.core.startswith = custom_startswith
+click_completion.init()
+
+completion_cmd_help = """Shell completion for click-completion-command
+Available shell types:
+    \b
+      %s
+      Default type: auto
+      """ % "\n  ".join(
+    "{:<12} {}".format(k, click_completion.core.shells[k])
+    for k in sorted(click_completion.core.shells.keys())
+)
+
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 
-@group(context_settings=CONTEXT_SETTINGS)
-@version_option(version=get_version())
-@option("--debug", "-d", default=False, is_flag=True, help="Enable debug mode")
-@pass_context
+@click.group(context_settings=CONTEXT_SETTINGS)
+@click.version_option(version=get_version())
+@click.option("--debug", "-d", default=False, is_flag=True, help="Enable debug mode")
+@click.pass_context
 def cli(ctx, debug):
     """A command-line tool to interact with data from AWS APIs"""
     ctx.ensure_object(dict)
     ctx.obj["DEBUG"] = debug
 
 
+@cli.group(hidden=True)
+@click.option(
+    "-i",
+    "--case-insensitive/--no-case-insensitive",
+    default=True,
+    help="Case insensitive completion",
+)
+@click.pass_context
+def completion(ctx, case_insensitive, help=completion_cmd_help):
+    """Commands for shell completion"""
+    extra_env = (
+        {"_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE": "ON"}
+        if case_insensitive
+        else {}
+    )
+    ctx.obj["EXTRA_ENV"] = extra_env
+
+
+@completion.command()
+@click.pass_context
+def bash(ctx):
+    """Print BASH completion script for sourcing"""
+    extra_env = ctx.obj["EXTRA_ENV"]
+    click.echo(click_completion.core.get_code("bash", extra_env=extra_env))
+
+
+@completion.command()
+@click.pass_context
+def zsh(ctx):
+    """Print ZSH completion script for sourcing"""
+    extra_env = ctx.obj["EXTRA_ENV"]
+    click.echo(click_completion.core.get_code("zsh", extra_env=extra_env))
+
+
+@completion.command()
+@click.pass_context
+def fish(ctx):
+    """Print fish completion script for sourcing"""
+    extra_env = ctx.obj["EXTRA_ENV"]
+    click.echo(click_completion.core.get_code("fish", extra_env=extra_env))
+
+
+@completion.command()
+@click.pass_context
+def powershell(ctx):
+    """Print Powershell completion script for sourcing"""
+    extra_env = ctx.obj["EXTRA_ENV"]
+    click.echo(click_completion.core.get_code("powershell", extra_env=extra_env))
+
+
 @cli.group()
-@pass_context
+@click.pass_context
 def organization(ctx):
     """Interact with data from AWS Organizations APIs"""
     ctx.ensure_object(dict)
@@ -56,42 +119,46 @@ def organization(ctx):
 def handle_error(ctx, err_msg, tb=None):
     """Takes an error message and an optional traceback, prints them, and quits"""
     if err_msg is not None:
-        secho(err_msg, fg="red")
+        click.secho(err_msg, fg="red")
         if tb is not None:
-            echo()
-            secho(tb, fg="red")
+            click.echo()
+            click.secho(tb, fg="red")
         ctx.exit(1)
 
 
 @organization.command(short_help="Dump org data as JSON")
-@option(
+@click.option(
     "--format",
     "-f",
     "format_",
     default="JSON",
-    type=Choice(["DOT", "JSON", "YAML"], case_sensitive=False),
+    type=click.Choice(["DOT", "JSON", "YAML"], case_sensitive=False),
     help="The output format for the data",
 )
-@option(
+@click.option(
     "--no-accounts",
     default=False,
     is_flag=True,
     help="Exclude account data from the model",
 )
-@option(
+@click.option(
     "--no-policies",
     default=False,
     is_flag=True,
     help="Exclude policy data from the model",
 )
-@option("--out-file", "-o", help="File path to write data instead of stdout")
-@pass_context
+@click.option("--out-file", "-o", help="File path to write data instead of stdout")
+@click.option(
+    "--flatten", default=False, is_flag=True, help="Flatten nested model keys"
+)
+@click.pass_context
 def dump_all(
-    ctx: Dict[str, Any],
+    ctx: dict[str, Any],
     format_: str,
     no_accounts: bool,
     no_policies: bool,
     out_file: str,
+    flatten: bool,
 ) -> None:
     """Dump a data representation of the organization"""
     err_msg = None
@@ -118,48 +185,50 @@ def dump_all(
             s_func = odb.to_dot
         if out_file is None:
             out_file = "-"
-        with open_file(out_file, mode="wb") as f:
-            f.write(bytes(s_func(), "utf-8"))
+        with click.open_file(out_file, mode="wb") as f:
+            f.write(bytes(s_func(flatten=flatten), "utf-8"))
     except ClientError as exc_info:
         err_msg = f"Service Error: {str(exc_info)}"
     except NoCredentialsError:
         err_msg = "Error: Unable to locate AWS credentials"
     except Exception as exc_info:
         err_msg = f"Unknown Error: {str(exc_info)}"
-        tb = format_exc()
+        tb = traceback.format_exc()
     handle_error(ctx, err_msg, tb)
 
 
 @organization.command(short_help="Query for account details")
-@option("--accounts", "-a", required=True, help="A space-delimited list of account IDs")
-@option(
+@click.option(
+    "--accounts", "-a", required=True, help="A space-delimited list of account IDs"
+)
+@click.option(
     "--include-effective-policies",
     default=False,
     is_flag=True,
     help="Include effective policies for the accounts",
 )
-@option(
+@click.option(
     "--include-parents",
     default=False,
     is_flag=True,
     help="Include parent data for the accounts",
 )
-@option(
+@click.option(
     "--include-tags",
     default=False,
     is_flag=True,
     help="Include tags applied to the accounts",
 )
-@option(
+@click.option(
     "--include-policies",
     default=False,
     is_flag=True,
     help="Include policies attached to the accounts",
 )
-@pass_context
+@click.pass_context
 def lookup_accounts(
-    ctx: Dict[str, Any],
-    accounts: List[str],
+    ctx: dict[str, Any],
+    accounts: list[str],
     include_parents: bool,
     include_effective_policies: bool,
     include_policies: bool,
@@ -174,7 +243,7 @@ def lookup_accounts(
     account_ids = []
     invalid_ids = []
     for account in accounts_unvalidated:
-        if fullmatch(r"^[\d]{12}$", account) is not None:
+        if re.fullmatch(r"^[\d]{12}$", account) is not None:
             account_ids.append(account)
         else:
             invalid_ids.append(account)
@@ -210,24 +279,24 @@ def lookup_accounts(
         for acct in odb.dm.accounts
         if acct.id in account_ids
     ]
-    echo(json_dumps(data, default=str))
+    click.echo(json.dumps(data, default=str))
 
 
 @organization.command()
-@option("--table", "-t", required=True, help="Name of the DynamoDB table")
-@option(
+@click.option("--table", "-t", required=True, help="Name of the DynamoDB table")
+@click.option(
     "--in-file", "-i", required=True, help="File containing a list of Account objects"
 )
-@pass_context
+@click.pass_context
 def write_accounts_to_dynamodb(
-    ctx: Dict[str, Any],
+    ctx: dict[str, Any],
     table: str,
     in_file: str,
 ) -> None:
     """Write a list of accounts to a DynamoDB table"""
     data = None
-    with open_file(in_file, mode="r") as f:
-        data = json_load(f)
+    with click.open_file(in_file, mode="r") as f:
+        data = json.load(f)
     odb = OrganizationDataBuilder()
     if not isinstance(data, list):
         handle_error(err_msg="Data is not a list")
@@ -236,20 +305,20 @@ def write_accounts_to_dynamodb(
     client = APIClient("dynamodb")
     ret = {"responses": []}
     # Group into batches of 25 since that's the max for BatchWriteItem
-    for group_ in zip_longest(*[iter(accounts)] * 25):
+    for group_ in itertools.zip_longest(*[iter(accounts)] * 25):
         items = prepare_dynamodb_batch_put_request(table=table, items=group_)
         res = client.api("batch_write_item", request_items=items)
         # TODO: Add handling of any "UnprocessedItems" in the response. Add retry with
         # exponential backoff.
         ret["responses"].append(res)
-    echo(json_dumps(ret))
+    click.echo(json.dumps(ret))
 
 
 @organization.command()
-@option("--table", "-t", required=True, help="Name of the DynamoDB table")
-@pass_context
+@click.option("--table", "-t", required=True, help="Name of the DynamoDB table")
+@click.pass_context
 def read_accounts_from_dynamodb(
-    ctx: Dict[str, Any],
+    ctx: dict[str, Any],
     table: str,
 ) -> None:
     """Fetch a list of accounts from a DynamoDB table"""
@@ -258,4 +327,4 @@ def read_accounts_from_dynamodb(
     accounts = [Account(**account) for account in deserialize_dynamodb_items(res)]
     odb = OrganizationDataBuilder()
     odb.dm.accounts = accounts
-    echo(odb.to_json(field_name="accounts"))
+    click.echo(odb.to_json(field_name="accounts"))

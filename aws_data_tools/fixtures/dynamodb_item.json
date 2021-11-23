@@ -1,0 +1,28 @@
+{
+  "id": "123456789012",
+  "name": "A test item",
+  "test_number": 1,
+  "test_list": ["foo", "bar", "baz"],
+  "test_map": {
+    "test_string": "A test string",
+    "test_number": 5
+  },
+  "test_list_of_objects": [
+    {
+      "foo": "bar",
+      "biz": "baz"
+    },
+    {
+      "foo": "bar",
+      "biz": "baz"
+    }
+  ],
+  "test_nested_map": {
+    "id": {
+      "test_map": {
+        "is_nested": true
+      },
+      "test_set": ["just", "a", "set", "with", 2, "mixed", "types"]
+    }
+  }
+}
