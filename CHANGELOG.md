@@ -12,7 +12,14 @@ Notes for any unreleased changes do here. When a new release is cut, move these 
 the unreleased section to the section for the new release.
 -->
 
-No unreleased changes.
+### Changed
+
+- Changed the `Account.joined_timestamp` field from datetime to str to fix DynamoDB
+  (de)serialization
+- Changed the `Organization` model to allow fields to be null for empty init
+- Fixes broken login in `ModelBase.to_dict()` when passing field_name, removes unused
+  flatten kwarg
+- Bumps ipython dev dependency due to vulnerability
 
 ## [0.1.1] - 2021-11-23
 

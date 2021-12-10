@@ -26,7 +26,7 @@ class ModelBase:
         return from_dict(data_class=cls, data=decamelize(depascalize(data)))
 
     def to_dict(
-        self, field_name: str = None, flatten: bool = False
+        self, field_name: str = None
     ) -> Union[dict[str, Any], list[dict[str, Any]]]:  # pragma: no cover
         """
         Serialize the dataclass instance to a dict, or serialize a single field. If the
@@ -37,7 +37,7 @@ class ModelBase:
         if field_name is not None:
             if field_name in data.keys():
                 if isinstance(data[field_name], (dict, list)):
-                    return self.data[field_name]
+                    return data[field_name]
                 return {field_name: data[field_name]}
             raise Exception(f"Field {field_name} does not exist")
         return data
