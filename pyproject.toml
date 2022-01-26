@@ -31,14 +31,16 @@ Tracker = "https://github.com/timoguin/aws-data-tools-py/issues"
 python = ">=3.9,<4"
 boto3 = "^1.17.80"
 dacite = "^1.6.0"
-graphviz = "^0.16"
 pyhumps = "^3.0.2"
 PyYAML = "^5.4.1"
 structlog = "^21.1.0"
 
+# Optional extras: graphviz
+graphviz = {version = "^0.16", optional = true, extras=["all", "graphviz"]}
+
 # Optional extras: cli
-click = {version = "^8.0.1", optional = true, extras=["cli"]}
-click-completion = {version = "^0.5.2", optional = true, extras=["cli"]}
+click = {version = "^8.0.1", optional = true, extras=["all", "cli"]}
+click-completion = {version = "^0.5.2", optional = true, extras=["all", "cli"]}
 
 # Optional extras: devtools
 ipdb = {version = "^0.13.8", optional = true}
@@ -68,6 +70,11 @@ pytest-custom-exit-code = "^0.3.0"
 tox-poetry = "^0.4.0"
 
 [tool.poetry.extras]
+all = [
+    "click",
+    "click-completion",
+    "graphviz"
+]
 cli = ["click", "click-completion"]
 devtools = [
     "ipdb",
@@ -81,6 +88,7 @@ docs = [
     "mkdocs-macros-plugin",
     "mkdocs-material"
 ]
+graphviz = ["graphviz"]
 
 [tool.poetry.scripts]
 awsdata = "aws_data_tools.cli:cli"

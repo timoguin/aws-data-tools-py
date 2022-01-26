@@ -25,6 +25,19 @@ By default, the CLI is not installed. To include it, you can specify it as an ex
 $ pip install aws-data-tools[cli]
 ```
 
+Graphviz is also an optional dependency that is required for outputing an AWS
+Organization as a DOT-formatted file that can be used to generate a digraph:
+
+```
+$ pip install aws-data-tools[graphviz]
+```
+
+To install everything, you can specify "all" as an extra:
+
+```
+$ pip install aws-data-tools[all]
+```
+
 ## Quickstart
 
 The quickest entrypoints are using the data builders and the CLI.
