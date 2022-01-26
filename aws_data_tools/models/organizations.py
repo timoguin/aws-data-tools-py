@@ -2,7 +2,6 @@
 Dataclass builders and models for working with AWS Organizations APIs
 """
 
-from datetime import datetime
 from dataclasses import dataclass, field, InitVar
 import logging
 from typing import Any, Union
@@ -323,7 +322,7 @@ class Account(ModelBase):
     arn: str
     email: str
     id: str
-    joined_timestamp: datetime
+    joined_timestamp: str
     name: str
     joined_method: str
     status: str
@@ -347,13 +346,15 @@ class Account(ModelBase):
 class Organization(ModelBase):
     """Represents an organization and all it's nodes and edges"""
 
-    arn: str
-    available_policy_types: list[PolicyTypeSummary]
-    feature_set: str
-    id: str
-    master_account_arn: str
-    master_account_email: str
-    master_account_id: str
+    # We allow all these fields to default to None so we can support initializing an
+    # organization object with empty data.
+    arn: str = field(default=None)
+    available_policy_types: list[PolicyTypeSummary] = field(default=None)
+    feature_set: str = field(default=None)
+    id: str = field(default=None)
+    master_account_arn: str = field(default=None)
+    master_account_email: str = field(default=None)
+    master_account_id: str = field(default=None)
 
     # TODO: These collections should be converted to container data classes to be able
     # to better able to handle operations against specific fields. Currently,
