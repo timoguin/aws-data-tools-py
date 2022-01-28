@@ -6,6 +6,8 @@ from dataclasses import dataclass, field, InitVar
 import logging
 from typing import Any, Union
 
+from dacite.config import Config
+
 try:
     import graphviz
 except ImportError:
@@ -342,6 +344,13 @@ class Account(ModelBase):
     def to_parchild(self) -> ParChild:
         """Return the account as a ParChild (parent) object"""
         return ParChild.from_dict(self.to_parchild_dict())
+
+    @classmethod
+    def from_dict(cls, *args, **kwargs):
+        # boto3 returns the "joined_method" as datetime.datetime, which can't
+        # serialize cleanly for DynamoDB. Passing this custom config tells dacite to
+        # cast any fields that are supposed to be strings to strings.
+        return super().from_dict(*args, config=Config(cast=[str]))
 
 
 class DependencyError(Exception):
