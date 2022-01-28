@@ -21,9 +21,9 @@ class ModelBase:
     """Base class for all models with helpers for serialization"""
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any], **kwargs):
         """Initialize the model from a dictionary"""
-        return from_dict(data_class=cls, data=decamelize(depascalize(data)))
+        return from_dict(data_class=cls, data=decamelize(depascalize(data)), **kwargs)
 
     def to_dict(
         self, field_name: str = None
@@ -70,7 +70,10 @@ class ModelBase:
         """Deserialize the JSON string to an instance of the dataclass"""
         # Try to remove any escape characters from the string based on the assumption
         # that it could be an escape characters
-        return cls.from_dict(json.loads(s.replace('\\"', '"').replace("\\n", "\n")))
+        return cls.from_dict(
+            json.loads(s.replace('\\"', '"').replace("\\n", "\n")),
+            **kwargs,
+        )
 
     def to_yaml(self, escape: bool = False, **kwargs) -> str:  # pragma: no cover
         """Serialize the dataclass instance to a YAML string"""
@@ -84,4 +87,4 @@ class ModelBase:
         """Deserialize the YAML string to an instance of the dataclass"""
         # Try to remove any escape characters from the string based on the assumption
         # that it could have escape characters
-        return cls.from_dict(yaml.safe_load(s.replace('\\"', '"')))
+        return cls.from_dict(yaml.safe_load(s.replace('\\"', '"')), **kwargs)

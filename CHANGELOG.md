@@ -12,12 +12,18 @@ Notes for any unreleased changes do here. When a new release is cut, move these 
 the unreleased section to the section for the new release.
 -->
 
+### Added
+
+- New extras available for installation: "graphviz" and "all."
+
 ### Changed
 
 - Changed the `Account.joined_timestamp` field from datetime to str to fix DynamoDB
-  (de)serialization
+  (de)serialization. Since boto3 returns the field as datetime, also added config to
+  from_dict() to cast it to string.
+- Updates `ModelBase.from_dict()` to accept and pass through kwargs
 - Changed the `Organization` model to allow fields to be null for empty init
-- Fixes broken login in `ModelBase.to_dict()` when passing field_name, removes unused
+- Fixes broken logic in `ModelBase.to_dict()` when passing field_name, removes unused
   flatten kwarg
 - Bumps ipython dev dependency due to vulnerability
 - Upgrades dependencies
