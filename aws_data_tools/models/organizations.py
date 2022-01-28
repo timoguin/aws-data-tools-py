@@ -6,8 +6,10 @@ from dataclasses import dataclass, field, InitVar
 import logging
 from typing import Any, Union
 
-# Make this an optional dependency and handle import failure
-import graphviz
+try:
+    import graphviz
+except ImportError:
+    graphviz = None
 
 from ..client import APIClient
 from ..utils.tags import query_tags
@@ -342,6 +344,10 @@ class Account(ModelBase):
         return ParChild.from_dict(self.to_parchild_dict())
 
 
+class DependencyError(Exception):
+    pass
+
+
 @dataclass
 class Organization(ModelBase):
     """Represents an organization and all it's nodes and edges"""
@@ -404,6 +410,10 @@ class Organization(ModelBase):
 
     def to_dot(self) -> str:
         """Return the organization as a GraphViz DOT diagram"""
+        if graphviz is None:
+            raise DependencyError(
+                "The graphviz library is not installed by default: pip install aws-data-tools[graphviz]"
+            )
         graph = graphviz.Digraph("Organization", filename="organization.dot")
         nodes = []
         nodes.append(self.root)

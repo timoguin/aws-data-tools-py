@@ -20,6 +20,13 @@ the unreleased section to the section for the new release.
 - Fixes broken login in `ModelBase.to_dict()` when passing field_name, removes unused
   flatten kwarg
 - Bumps ipython dev dependency due to vulnerability
+- Upgrades dependencies
+- To use the `Organization.to_dot()` functionality, you must now specify the graphviz
+  dependency during installation: `pip install aws-data-tools[graphviz]`
+
+### Removed
+
+- The graphviz library is no longer installed by default.
 
 ## [0.1.1] - 2021-11-23
 
