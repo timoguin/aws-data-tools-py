@@ -42,7 +42,7 @@ jobs:
 
       - name: Install Python dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: make python-install-deps PY_INSTALL_ARGS="--extras=docs"
+        run: make python-install-deps PY_INSTALL_ARGS="--extras=all"
 
   lint:
     name: Lint
@@ -142,26 +142,35 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Set up Python
-        uses: actions/setup-python@v1
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v2
         with:
           python-version: 3.9
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1.1.6
+        uses: snok/install-poetry@v1
         with:
-          virtualenvs-create: false
+          virtualenvs-create: true
           virtualenvs-in-project: true
+          installer-parallel: true
 
-      - name: Restore cache venv
-        uses: syphar/restore-virtualenv@v1
-        id: cache-venv
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: make python-install-deps
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1.0.3
+        uses: github/codeql-action/init@v2
         with:
           languages: python
-          setup_python_dependencies: false
+          setup-python-dependencies: false
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1.0.3
+        uses: github/codeql-action/analyze@v2
