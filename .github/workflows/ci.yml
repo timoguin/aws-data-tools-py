@@ -35,6 +35,10 @@ jobs:
       - name: Restore cached venv
         uses: syphar/restore-virtualenv@v1
         id: cache-venv
+        with: 
+          requirements_files: poetry.lock
+          # need to set this to manually bust the cache
+          custom_cache_key_element: v2
 
       - name: Restore Pip download cache
         uses: syphar/restore-pip-download-cache@v1
