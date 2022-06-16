@@ -113,6 +113,13 @@ class EffectivePolicy(ModelBase):
         data = cls.fetch_data(**kwargs)
         return cls.from_dict(data)
 
+    @classmethod
+    def from_dict(cls, *args, **kwargs):
+        # boto3 returns the "joined_method" as datetime.datetime, which can't
+        # serialize cleanly for DynamoDB. Passing this custom config tells dacite to
+        # cast any fields that are supposed to be strings to strings.
+        return super().from_dict(*args, config=Config(cast=[str]))
+
     def __post_init__(self):
         self.__ensure_valid_policy_type(self.policy_type)
 
@@ -778,8 +785,9 @@ class OrganizationDataBuilder(ModelBase):
                 continue
             data = self.api(
                 "describe_effective_policy", policy_type=p_type, target_id=target_id
-            )
-            effective_policies.append(data)
+            ).get("effective_policy")
+            effective_policy = EffectivePolicy.from_dict(data)
+            effective_policies.append(effective_policy)
         return effective_policies
 
     def __e_effective_policies(

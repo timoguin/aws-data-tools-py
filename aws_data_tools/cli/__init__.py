@@ -148,9 +148,6 @@ def handle_error(ctx, err_msg, tb=None):
     help="Exclude policy data from the model",
 )
 @click.option("--out-file", "-o", help="File path to write data instead of stdout")
-@click.option(
-    "--flatten", default=False, is_flag=True, help="Flatten nested model keys"
-)
 @click.pass_context
 def dump_all(
     ctx: dict[str, Any],
@@ -158,7 +155,6 @@ def dump_all(
     no_accounts: bool,
     no_policies: bool,
     out_file: str,
-    flatten: bool,
 ) -> None:
     """Dump a data representation of the organization"""
     err_msg = None
@@ -186,7 +182,7 @@ def dump_all(
         if out_file is None:
             out_file = "-"
         with click.open_file(out_file, mode="wb") as f:
-            f.write(bytes(s_func(flatten=flatten), "utf-8"))
+            f.write(bytes(s_func(), "utf-8"))
     except ClientError as exc_info:
         err_msg = f"Service Error: {str(exc_info)}"
     except NoCredentialsError:
