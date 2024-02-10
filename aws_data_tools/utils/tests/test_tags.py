@@ -1,4 +1,4 @@
-from moto import mock_organizations
+from moto import mock_aws
 import pytest
 
 
@@ -31,7 +31,7 @@ def expected_tags_map(request):
 
 
 @pytest.mark.parametrize("tags_type", ["empty", "not_empty"])
-@mock_organizations
+@mock_aws
 def test_query_tags(aws_credentials, tag_list_map, expected_tags_map, tags_type):
     client = APIClient("organizations")
     tag_list = tag_list_map[tags_type]
