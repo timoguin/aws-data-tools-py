@@ -27,7 +27,7 @@ jobs:
           python-version: 3.9
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1.1.6
+        uses: snok/install-poetry@v1.3.4
         with:
           virtualenvs-create: false
           virtualenvs-in-project: true
@@ -36,7 +36,7 @@ jobs:
         uses: syphar/restore-virtualenv@v1
         id: cache-venv
         with: 
-          requirements_files: poetry.lock
+          requirement_files: poetry.lock
           # need to set this to manually bust the cache
           custom_cache_key_element: v2
 
@@ -46,7 +46,7 @@ jobs:
 
       - name: Install Python dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: make python-install-deps PY_INSTALL_ARGS="--extras=all"
+        run: make python-install-deps
 
   lint:
     name: Lint
@@ -64,7 +64,7 @@ jobs:
           python-version: 3.9
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1.1.6
+        uses: snok/install-poetry@v1.3.4
         with:
           virtualenvs-create: false
           virtualenvs-in-project: true
@@ -92,7 +92,7 @@ jobs:
           python-version: 3.9
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1.1.6
+        uses: snok/install-poetry@v1.3.4
         with:
           virtualenvs-create: false
           virtualenvs-in-project: true
@@ -120,7 +120,7 @@ jobs:
           python-version: 3.9
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1.1.6
+        uses: snok/install-poetry@v1.3.4
         with:
           virtualenvs-create: false
           virtualenvs-in-project: true
