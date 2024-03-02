@@ -1,10 +1,9 @@
-# flake8: noqa: F401
 from typing import Union
 from unittest import mock
 
 import graphviz
 from humps import depascalize
-from moto import mock_organizations
+from moto import mock_aws
 import pytest
 
 from aws_data_tools.conftest import FIXTURES_PATH
@@ -275,10 +274,9 @@ class TestOrganizationDataBuilder:
             paths = [line.rstrip("\n") for line in f.readlines()]
         if path_type == "ou":
             return self.process_ou_paths(paths)
-        elif path_type == "account":
+        if path_type == "account":
             return self.process_account_paths(paths)
-        else:
-            raise Exception(f"Invalid path type {path_type}")
+        raise Exception(f"Invalid path type {path_type}")
 
     @pytest.fixture(scope="class")
     def ou_paths(self):
@@ -307,7 +305,7 @@ class TestOrganizationDataBuilder:
         return organization.root
 
     @pytest.fixture(scope="class")
-    @mock_organizations
+    @mock_aws
     def organizational_units(
         self, client, root, ou_paths
     ) -> dict[str, OrganizationalUnit]:
@@ -339,7 +337,7 @@ class TestOrganizationDataBuilder:
         return data
 
     @pytest.fixture(scope="class")
-    @mock_organizations
+    @mock_aws
     def accounts(
         self,
         client,
@@ -373,7 +371,7 @@ class TestOrganizationDataBuilder:
         return created_accounts
 
     @pytest.fixture(scope="class")
-    @mock_organizations
+    @mock_aws
     def policies(self, client, organization):
         """Return policies in the test organization"""
         policies = []
@@ -388,21 +386,21 @@ class TestOrganizationDataBuilder:
             policies.extend(p_type_policies)
         return policies
 
-    @mock_organizations
+    @mock_aws
     def test_fetch_organization(self, builder, organization):
         builder.fetch_organization()
         organization.root = None
         assert isinstance(builder.dm, Organization)
         assert builder.dm == organization
 
-    @mock_organizations
+    @mock_aws
     def test_fetch_root(self, builder, root):
         builder.fetch_organization()
         builder.fetch_root()
         assert isinstance(builder.dm.root, Root)
         assert builder.dm.root == root
 
-    @mock_organizations
+    @mock_aws
     def test_fetch_policies(self, builder, policies):
         builder.fetch_organization()
         builder.fetch_root()
@@ -411,7 +409,7 @@ class TestOrganizationDataBuilder:
             assert isinstance(policy, Policy)
         assert builder.dm.policies == policies
 
-    @mock_organizations
+    @mock_aws
     def test_fetch_policy_targets(
         self,
         builder,
@@ -440,7 +438,7 @@ class TestOrganizationDataBuilder:
             assert isinstance(target, PolicyTargetSummary)
         assert fetched == expected
 
-    @mock_organizations
+    @mock_aws
     def test_fetch_ous(self, builder, organizational_units):
         expected = {ou.id: ou for ou in organizational_units.values()}
         builder.fetch_organization()
@@ -452,7 +450,7 @@ class TestOrganizationDataBuilder:
             assert isinstance(ou, OrganizationalUnit)
         assert fetched == expected
 
-    @mock_organizations
+    @mock_aws
     def test_fetch_ou_tags(self, builder, organizational_units):
         builder.fetch_ous()
         builder.fetch_ou_tags()
@@ -461,7 +459,7 @@ class TestOrganizationDataBuilder:
         assert fetched == expected
 
     @pytest.mark.parametrize("include_parents", [True, False])
-    @mock_organizations
+    @mock_aws
     def test_fetch_accounts(self, builder, accounts, include_parents):
         expected = {}
         if include_parents:
@@ -480,7 +478,7 @@ class TestOrganizationDataBuilder:
             assert isinstance(account, Account)
         assert fetched == expected
 
-    @mock_organizations
+    @mock_aws
     def test_fetch_account_tags(self, builder, accounts):
         builder.fetch_accounts()
         builder.fetch_account_tags()
@@ -488,7 +486,7 @@ class TestOrganizationDataBuilder:
         fetched = {account.id: account.tags for account in builder.dm.accounts}
         assert fetched == expected
 
-    @mock_organizations
+    @mock_aws
     def test_fetch_effective_policies(self, builder, accounts):
         builder.fetch_accounts(include_parents=False)
         builder.fetch_effective_policies()
@@ -512,7 +510,7 @@ class TestOrganizationDataBuilder:
     def test_fetch_all_tags(self, odb):
         assert True is True
 
-    @mock_organizations
+    @mock_aws
     def test_fetch_all(
         self,
         builder,
@@ -531,7 +529,7 @@ class TestOrganizationDataBuilder:
         assert builder.dm == org
 
     @mock.patch("builtins.open", create=True)
-    @mock_organizations
+    @mock_aws
     def test_to_dot(self, builder, organization):
         builder.fetch_all()
         source_str = builder.to_dot()

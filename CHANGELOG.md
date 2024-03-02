@@ -25,14 +25,15 @@ the unreleased section to the section for the new release.
 - Changed the `Organization` model to allow fields to be null for empty init
 - Fixes broken logic in `ModelBase.to_dict()` when passing field_name, removes unused
   flatten kwarg
-- Bumps ipython dev dependency due to vulnerability
-- Upgrades dependencies
+- Upgrades all dependencies
+- Moves doc tooling into a "docs" dependency group instead of an extra
 - To use the `Organization.to_dot()` functionality, you must now specify the graphviz
   dependency during installation: `pip install aws-data-tools[graphviz]`
 
 ### Removed
 
 - The graphviz library is no longer installed by default.
+- The devtools and docs extras have been removed
 
 ## [0.1.1] - 2021-11-23
 

@@ -1,6 +1,6 @@
-DEPS ?=awk docker docker-compose grep poetry realpath sed
+DEPS ?=awk docker grep poetry realpath sed
 AWS_OKTA_PROFILE ?=
-PY_INSTALL_ARGS ?=--extras="cli devtools docs"
+PY_INSTALL_ARGS ?=--extras="cli"
 VENV_DIR ?=.venv
 CMD ?=/bin/bash
 DEBUG ?=false
@@ -43,12 +43,12 @@ lint-docs: ${VENV_DIR}
 .PHONY: test-integration ## Run the integration test suite
 test-integration: run-test-server
 	@printf "${OK}%s...\n${CCEND}" "Starting motoserver"
-	@docker-compose --log-level ERROR up --detach >/dev/null
+	@docker --log-level ERROR compose up --detach >/dev/null
 	@pushd tests >/dev/null && ./test.sh && popd >/dev/null || popd >/dev/null
 
-.PHONY: run-test-server ## Start motoserver with docker-compose if it's not running
+.PHONY: run-test-server ## Start motoserver with docker compose if it's not running
 run-test-server:
-	@CONTAINER_ID=$$(docker-compose ps --quiet motoserver 2>/dev/null);            \
+	@CONTAINER_ID=$$(docker compose ps --quiet motoserver 2>/dev/null);            \
 	 CONTAINER_START=0;                                                            \
 	 if [ "$$CONTAINER_ID" != "" ]; then                                           \
 	   if ! $$(docker ps --quiet --no-trunc | grep --quiet "$$CONTAINER_ID"); then \
@@ -58,12 +58,12 @@ run-test-server:
 	   CONTAINER_START=1;                                                          \
 	 fi;                                                                           \
 	 if [ $$CONTAINER_START -eq 1 ]; then                                          \
-	   docker-compose up --detach --no-recreate --remove-orphans;                  \
+	   docker compose up --detach --no-recreate --remove-orphans;                  \
 	 fi
 
 .PHONY: stop-test-server ## Stop motoserver container(s)
 stop-test-server:
-	@docker-compose down --remove-orphans --volumes
+	@docker compose down --remove-orphans --volumes
 
 .PHONY: build ## Build the Python package for distribution
 build: ${VENV_DIR}
@@ -104,7 +104,7 @@ clean:
 .PHONY: clean-all ## Run clean, remove the Python venv and untracked / ignored Git files
 clean-all: clean
 	@git clean --quiet --force -d -f -x
-	@docker-compose down --rmi 'all' --volumes --remove-orphans
+	@docker compose down --rmi 'all' --volumes --remove-orphans
 
 .PHONY: help
 help:

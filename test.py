@@ -1,4 +1,4 @@
-from moto import mock_organizations
+from moto import mock_aws
 
 from aws_data_tools.models import (
     Account,
@@ -10,7 +10,7 @@ from aws_data_tools import conftest
 ou_paths = conftest.ou_paths()
 account_paths = conftest.account_paths()
 
-mock = mock_organizations()
+mock = mock_aws()
 mock.start()
 
 odb = OrganizationDataBuilder()
