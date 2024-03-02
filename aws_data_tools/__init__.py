@@ -1,6 +1,7 @@
 """
 A library for working with data from AWS APIs
 """
+
 # flake8: noqa: F401
 
 from . import client, models, utils

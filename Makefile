@@ -1,6 +1,6 @@
 DEPS ?=awk docker grep poetry realpath sed
 AWS_OKTA_PROFILE ?=
-PY_INSTALL_ARGS ?=--extras="cli"
+PY_INSTALL_ARGS ?=--extras="all" --with="docs"
 VENV_DIR ?=.venv
 CMD ?=/bin/bash
 DEBUG ?=false
@@ -27,7 +27,7 @@ shell: ${VENV_DIR}
 shellcmd: ${VENV_DIR}
 	@${SHELL_CMD_PREFIX} /bin/bash -c "poetry run ${CMD}"
 
-.PHONY: lint
+.PHONY: lint ## Run code linting
 lint: ${VENV_DIR}
 	@echo "Running the black code formatter"
 	@poetry run black ${ARGS} .
@@ -35,7 +35,7 @@ lint: ${VENV_DIR}
 	# @echo "Running flakehell plugins"
 	# @poetry run flakehell lint aws_data_tools
 
-.PHONY: lint-docs
+.PHONY: lint-docs ## Run docs linting
 lint-docs: ${VENV_DIR}
 	@echo "Running blacken code formatter for Markdown code blocks"
 	@poetry run blacken-docs *.md
