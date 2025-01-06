@@ -1,6 +1,6 @@
 from moto import mock_aws
 
-from aws_data_tools.models import (
+from aws_data_tools.models.organizations import (
     Account,
     OrganizationalUnit,
     OrganizationDataBuilder,
